@@ -19,7 +19,11 @@ class NewPasswordPageState extends State<NewPasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.brown),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.brown,
+            size: 20,
+          ),
           onPressed: () {
             Navigator.pop(context);
           },
