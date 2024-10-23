@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -27,8 +28,7 @@ class LoginScreen extends StatelessWidget {
               ),
               const Spacer(),
               ElevatedButton(
-                onPressed: () {
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: mBrown,
                   foregroundColor: Colors.white,
@@ -47,8 +47,7 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               OutlinedButton(
-                onPressed: () {
-                },
+                onPressed: () {},
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Colors.white,
                   side: const BorderSide(color: Colors.grey),
@@ -60,9 +59,9 @@ class LoginScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.network(
-                      'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
-                      height: 18,
+                    SvgPicture.asset(
+                      'assets/icons/Google.svg',
+                      fit: BoxFit.fill,
                     ),
                     const SizedBox(width: 8),
                     const Text(
@@ -87,8 +86,7 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                    },
+                    onTap: () {},
                     child: const Text(
                       'Sign up',
                       style: TextStyle(
