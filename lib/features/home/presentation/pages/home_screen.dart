@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mona_coffee/core/utils/common.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -6,6 +7,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: mLightOrange,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,18 +118,13 @@ class CoffeeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Image.network(
-              'https://via.placeholder.com/150',
-              fit: BoxFit.cover,
-              height: 120,
-              width: double.infinity,
-            ),
+            child: Image.asset('assets/images/coffee.png')
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
