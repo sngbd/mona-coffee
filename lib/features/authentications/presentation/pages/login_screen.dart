@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -28,7 +29,9 @@ class LoginScreen extends StatelessWidget {
               ),
               const Spacer(),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  context.goNamed('login-form');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: mBrown,
                   foregroundColor: Colors.white,
@@ -86,7 +89,9 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      context.goNamed('sign-up');
+                    },
                     child: const Text(
                       'Sign up',
                       style: TextStyle(
