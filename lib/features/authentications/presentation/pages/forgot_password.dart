@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mona_coffee/pages/new_password.dart';
+import 'package:mona_coffee/features/authentications/presentation/pages/new_password.dart';
 
 class ForgotPasswordPage extends StatelessWidget {
   const ForgotPasswordPage({super.key});

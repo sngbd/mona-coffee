@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mona_coffee/pages/admin_login.dart';
 
 class NewPasswordPage extends StatefulWidget {
   const NewPasswordPage({super.key});
@@ -134,12 +133,7 @@ class NewPasswordPageState extends State<NewPasswordPage> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const AdminLogin()));
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.brown,
                   shape: RoundedRectangleBorder(
