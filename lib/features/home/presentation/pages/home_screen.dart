@@ -1,154 +1,306 @@
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
+import 'package:mona_coffee/models/categories_model.dart';
+import 'package:mona_coffee/models/menu_items_model.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const HomeContent(),
+    const CartScreen(),
+    const ProfileScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: mLightOrange,
-      body: SafeArea(
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        indicatorColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) {
+            if (states.contains(WidgetState.selected)) {
+              return const TextStyle(
+                color: mBrown,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              );
+            }
+            return const TextStyle(
+              color: Colors.grey,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            );
+          },
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) {
+            if (states.contains(WidgetState.selected)) {
+              return const IconThemeData(color: mBrown);
+            }
+            return const IconThemeData(color: Colors.grey);
+          },
+        ),
+      ),
+      child: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+        backgroundColor: Colors.white,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.coffee),
+            label: 'Menu',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.favorite),
+            label: 'Favorite',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Cart',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_circle),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeContent extends StatefulWidget {
+  const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  int _selectedCategoryIndex = 0;
+
+  void _onCategoryTapped(int index) {
+    setState(() {
+      _selectedCategoryIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Good Morning, Lorenzo',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[800]),
+            const SizedBox(height: 50),
+            const Text(
+              'Good Morning, Lorenzo',
+              style: TextStyle(
+                  color: mDarkBrown, fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 36),
+            _buildSearchBar(),
+            const SizedBox(height: 50),
+            const Text(
+              'Categories',
+              style: TextStyle(
+                color: mBrown,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search coffee...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Categories',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[800]),
-              ),
-            ),
-            const SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  SizedBox(width: 16),
-                  CategoryChip('Popular', isSelected: true),
-                  CategoryChip('Latte'),
-                  CategoryChip('Cappucino'),
-                  CategoryChip('Expresso'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.8,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: 6,
-                itemBuilder: (context, index) => const CoffeeItem(),
-              ),
-            ),
-            BottomNavigationBar(
-              selectedItemColor: Colors.brown,
-              unselectedItemColor: Colors.grey,
-              showUnselectedLabels: true,
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_border), label: 'Favorite'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.shopping_cart_outlined), label: 'Cart'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline), label: 'Profile'),
-              ],
-            ),
+            const SizedBox(height: 20),
+            _buildCategoryList(),
+            const SizedBox(height: 20),
+            _buildMenuGrid(),
+            const SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
-}
 
-class CategoryChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-
-  const CategoryChip(this.label, {super.key, this.isSelected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      child: Chip(
-        label: Text(label),
-        backgroundColor: isSelected ? Colors.brown : Colors.white,
-        labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.brown),
+  Widget _buildSearchBar() {
+    return TextField(
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        hintText: 'Search coffee',
+        hintStyle: TextStyle(
+          color: Colors.black.withOpacity(0.4),
+          fontSize: 14,
+        ),
+        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
       ),
     );
   }
-}
 
-class CoffeeItem extends StatelessWidget {
-  const CoffeeItem({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Image.asset('assets/images/coffee.png')
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Mocha Latte',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const Text('Ice/Hot', style: TextStyle(color: Colors.grey)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('40 k',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.brown),
-                      onPressed: () {},
-                    ),
-                  ],
+  Widget _buildCategoryList() {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 15),
+        itemBuilder: (context, index) {
+          bool isSelected = _selectedCategoryIndex == index;
+          return GestureDetector(
+            onTap: () => _onCategoryTapped(index),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? mBrown : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                categories[index],
+                style: TextStyle(
+                  color: isSelected ? Colors.white : mBrown,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+              ),
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(Map<String, String> menuItem) {
+    return GestureDetector(
+      onTap: () {},
+      child: Card(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: SizedBox(
+                    height: 80,
+                    child: Image.asset(
+                      menuItem['image']!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                menuItem['name']!,
+                style: const TextStyle(
+                  color: mBrown,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                menuItem['type']!,
+                style: const TextStyle(
+                  color: mBrown,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                menuItem['price']!,
+                style: const TextStyle(
+                  color: mBrown,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: mBrown,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuGrid() {
+    return Expanded(
+      child: GridView.builder(
+        itemCount: menuItems.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 0.8,
+        ),
+        itemBuilder: (context, index) {
+          final menuItem = menuItems[index];
+          return _buildMenuItem(menuItem);
+        },
       ),
     );
   }

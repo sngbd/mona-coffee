@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 
 class LoginFormScreen extends StatefulWidget {
@@ -23,23 +24,23 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60),
-              Text(
+              const SizedBox(height: 85),
+              const Text(
                 'Log in to get\nyour perfect cup.',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.brown[900],
+                  color: mDarkBrown,
                   height: 1.2,
                 ),
               ),
               const SizedBox(height: 48),
-              Text(
+              const Text(
                 'Email',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.brown[900],
+                  color: mDarkBrown,
                 ),
               ),
               const SizedBox(height: 8),
@@ -89,7 +90,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.brown,
+                      color: mBrown,
                     ),
                     onPressed: () {
                       setState(() {
@@ -104,7 +105,9 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    context.goNamed('home');
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: mBrown,
                     foregroundColor: Colors.white,
@@ -126,11 +129,12 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
               Center(
                 child: TextButton(
                   onPressed: () {
+                    context.goNamed('forgot_password');
                   },
-                  child: Text(
+                  child: const Text(
                     'Forgot password?',
                     style: TextStyle(
-                      color: Colors.brown[900],
+                      color: mDarkBrown,
                       fontSize: 14,
                     ),
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -27,12 +28,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 60),
-              Text(
+              const Text(
                 'Join us and start\nyour coffee journey.',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.brown[900],
+                  color: mDarkBrown,
                   height: 1.2,
                 ),
               ),
@@ -101,11 +102,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   TextButton(
                     onPressed: () {
+                      context.goNamed('login-form');
                     },
                     child: const Text(
                       'Log in',
                       style: TextStyle(
-                        color: Colors.brown,
+                        color: mBrown,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

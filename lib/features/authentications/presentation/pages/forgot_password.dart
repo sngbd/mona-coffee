@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mona_coffee/features/authentications/presentation/pages/new_password.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mona_coffee/core/utils/common.dart';
 
-class ForgotPasswordPage extends StatelessWidget {
-  const ForgotPasswordPage({super.key});
+class ForgotPasswordScreen extends StatelessWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,11 +14,11 @@ class ForgotPasswordPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios,
-            color: Colors.brown,
+            color: mDarkBrown,
             size: 20,
           ),
           onPressed: () {
-            Navigator.pop(context);
+            context.goNamed('login-form');
           },
         ),
       ),
@@ -30,76 +31,82 @@ class ForgotPasswordPage extends StatelessWidget {
             const Text(
               'Forgot Password',
               style: TextStyle(
-                color: Colors.brown,
+                color: mDarkBrown,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(
-              height: 85,
-            ),
-            const Text(
-              'Email',
-              style: TextStyle(
-                color: Colors.brown,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            TextFormField(
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Enter your email',
-                hintStyle: TextStyle(
-                  color: Colors.black.withOpacity(0.4),
-                  fontSize: 14,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: const BorderSide(color: Colors.brown),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: const BorderSide(color: Colors.brown),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  borderSide: const BorderSide(color: Colors.brown),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 85,
-            ),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const NewPasswordPage()));
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      )),
-                  child: const Text(
-                    'Send',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )),
-            )
+            const SizedBox(height: 85),
+            _buildEmailField(),
+            const SizedBox(height: 85),
+            _buildSendButton(context),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmailField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Email',
+          style: TextStyle(
+            color: mDarkBrown,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextFormField(
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            hintText: 'Enter your email',
+            hintStyle: TextStyle(
+              color: Colors.black.withOpacity(0.4),
+              fontSize: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: mBrown),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: mBrown),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: mBrown),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSendButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: () {
+          context.goNamed('new_password');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: mBrown,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        child: const Text(
+          'Send',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
