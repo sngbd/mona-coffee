@@ -105,9 +105,7 @@ class FavoritesScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement order again functionality
-                    },
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown,
                       minimumSize: const Size(100, 32),
@@ -125,7 +123,6 @@ class FavoritesScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.brown),
             onPressed: () {
-              // TODO: Implement delete functionality
             },
           ),
           const SizedBox(width: 8),

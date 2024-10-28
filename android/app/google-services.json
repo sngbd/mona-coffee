@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "692316914939",
+    "project_id": "mona-coffee",
+    "storage_bucket": "mona-coffee.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692316914939:android:c138ec3500ce50ee8adc5e",
+        "android_client_info": {
+          "package_name": "com.mona_coffee.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "692316914939-lr00r6i22ccn0efcp408m0ucuirjrcr3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mona_coffee.app",
+            "certificate_hash": "580c0555c63e1ae227dc9c62d3b92bb587e4afbe"
+          }
+        },
+        {
+          "client_id": "692316914939-mib2agp5js710hbmmm748d42da1kkfc1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU4bKI6fmAuOJYvnqKrm2XN6OjfmZxjVo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "692316914939-mib2agp5js710hbmmm748d42da1kkfc1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "692316914939-t8a83cd1qokvi5uhbgeniruc67bkc48a.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.monaCoffee"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

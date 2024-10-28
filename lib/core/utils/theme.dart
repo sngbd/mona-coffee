@@ -30,24 +30,24 @@ class AppTheme {
         ),
         floatingLabelBehavior: FloatingLabelBehavior.never,
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(10.0),
           borderSide: const BorderSide(
             width: 1,
-            color: mGray100,
+            color: mDarkBrown,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(10.0),
           borderSide: const BorderSide(
             width: 1,
-            color: mBlue,
+            color: Colors.black,
           ),
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(10.0),
           borderSide: const BorderSide(
             width: 1,
-            color: mGray100,
+            color: mBrown,
           ),
         ),
         hintStyle: const TextStyle(

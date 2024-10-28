@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,20 +9,26 @@ import 'package:mona_coffee/core/widgets/activity_indicator.dart';
 import 'package:mona_coffee/core/widgets/custom_input_field.dart';
 import 'package:mona_coffee/core/widgets/error_text.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
-import 'package:mona_coffee/features/authentications/presentation/blocs/sign_up_bloc.dart';
+import 'package:mona_coffee/features/authentications/data/repositories/authentication_repository.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 
-class SignUpScreen extends StatelessWidget {
-  const SignUpScreen({super.key});
+class LoginFormScreen extends StatelessWidget {
+  const LoginFormScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     Sizer().init(context);
 
+    
+    final AuthenticationRepository authenticationRepository =
+        AuthenticationRepository(FirebaseAuth.instance);
+
     return BlocProvider(
-      create: (context) => SignUpBloc(),
-      child: BlocConsumer<SignUpBloc, SignUpState>(
+      create: (context) =>
+          SignInBloc(authenticationRepository),
+      child: BlocConsumer<SignInBloc, SignInState>(
         listener: (context, state) {
-          if (state.status == FormStatusSignUp.failure) {
+          if (state.status == FormStatusSignIn.failure) {
             Flasher.showSnackBar(
               context,
               'Error',
@@ -31,12 +38,12 @@ class SignUpScreen extends StatelessWidget {
             );
           }
 
-          if (state.status == FormStatusSignUp.success) {
-            context.goNamed('sign-up-login-form');
+          if (state.status == FormStatusSignIn.success) {
+            context.goNamed('home');
           }
         },
         builder: (context, state) {
-          if (state.status == FormStatusSignUp.submitting) {
+          if (state.status == FormStatusSignIn.submitting) {
             return Scaffold(
               appBar: null,
               body: SizedBox(
@@ -67,7 +74,7 @@ class SignUpScreen extends StatelessWidget {
                     top: 25,
                   ),
                   child: Text(
-                    'Sign Up',
+                    'Log In',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
@@ -76,14 +83,14 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
               body: SafeArea(
-                child: SingleChildScrollView(
+                child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 60),
                       Text(
-                        'Join us and start\nyour coffee journey.',
+                        'Log in to get\nyour perfect cup.',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -91,7 +98,7 @@ class SignUpScreen extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 48),
                       CustomInputField(
                         paddingOuterTop: 15,
                         paddingOuterBottom: 0,
@@ -100,8 +107,8 @@ class SignUpScreen extends StatelessWidget {
                         keyboardType: TextInputType.emailAddress,
                         initialValue: state.email,
                         onChange: (value) => context
-                            .read<SignUpBloc>()
-                            .add(EmailSignUpChanged(value)),
+                            .read<SignInBloc>()
+                            .add(EmailSignInChanged(value)),
                       ),
                       state.emailError != null
                           ? ErrorText(
@@ -120,46 +127,19 @@ class SignUpScreen extends StatelessWidget {
                             ? FontAwesomeIcons.eyeSlash
                             : FontAwesomeIcons.eye,
                         onPressedSuffix: () => {
-                          context.read<SignUpBloc>().add(
-                              PasswordSignUpToggleChanged(
+                          context.read<SignInBloc>().add(
+                              PasswordSignInToggleChanged(
                                   !state.passwordToggleStatus)),
                         },
                         onChange: (value) => {
-                          context.read<SignUpBloc>().add(
-                                PasswordSignUpChanged(value),
+                          context.read<SignInBloc>().add(
+                                PasswordSignInChanged(value),
                               ),
                         },
                       ),
                       state.passwordError != null
                           ? ErrorText(
                               text: state.passwordError!,
-                            )
-                          : const SizedBox.shrink(),
-                      const SizedBox(height: 20),
-                      CustomInputField(
-                        paddingOuterTop: 15,
-                        paddingOuterBottom: 0,
-                        label: 'Password Confirmation*',
-                        hint: 'Confirm Password',
-                        initialValue: state.confirmPassword,
-                        obscureText: state.confirmPasswordToggleStatus,
-                        suffixIcon: state.confirmPasswordToggleStatus
-                            ? FontAwesomeIcons.eyeSlash
-                            : FontAwesomeIcons.eye,
-                        onPressedSuffix: () => {
-                          context.read<SignUpBloc>().add(
-                              ConfirmPasswordSignUpToggleChanged(
-                                  !state.confirmPasswordToggleStatus)),
-                        },
-                        onChange: (value) => {
-                          context.read<SignUpBloc>().add(
-                                ConfirmPasswordSignUpChanged(value),
-                              ),
-                        },
-                      ),
-                      state.confirmPasswordError != null
-                          ? ErrorText(
-                              text: state.confirmPasswordError!,
                             )
                           : const SizedBox.shrink(),
                       const SizedBox(height: 32),
@@ -169,8 +149,8 @@ class SignUpScreen extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () {
                             context
-                                .read<SignUpBloc>()
-                                .add(FormSignUpSubmitted());
+                                .read<SignInBloc>()
+                                .add(FormSignInSubmitted());
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: mBrown,
@@ -181,7 +161,7 @@ class SignUpScreen extends StatelessWidget {
                             ),
                           ),
                           child: const Text(
-                            'Sign Up',
+                            'Login',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -190,26 +170,17 @@ class SignUpScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Already have an account?',
-                            style: TextStyle(color: Colors.brown[900]),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              context.goNamed('sign-up-login-form');
-                            },
-                            child: const Text(
-                              'Log in',
-                              style: TextStyle(
-                                color: Colors.brown,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      Center(
+                        child: TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            'Forgot password?',
+                            style: TextStyle(
+                              color: Colors.brown[900],
+                              fontSize: 14,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),

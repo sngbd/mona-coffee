@@ -6,3 +6,10 @@ abstract class FormEvent extends Equatable {
   @override
   List<Object> get props => [];
 }
+
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+
+  @override
+  List<Object> get props => [];
+}

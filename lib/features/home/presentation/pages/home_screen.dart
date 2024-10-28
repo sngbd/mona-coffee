@@ -1,94 +1,108 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: mLightOrange,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Good Morning, Lorenzo',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[800]),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search coffee...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
+    return BlocBuilder<SignOutBloc, SignOutState>(
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: mLightOrange,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Good Morning, Lorenzo',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown[800]),
                   ),
-                  filled: true,
-                  fillColor: Colors.white,
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Categories',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[800]),
-              ),
-            ),
-            const SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  SizedBox(width: 16),
-                  CategoryChip('Popular', isSelected: true),
-                  CategoryChip('Latte'),
-                  CategoryChip('Cappucino'),
-                  CategoryChip('Expresso'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.8,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+                IconButton(
+                    onPressed: () {
+                      context.read<SignOutBloc>().add(SignOutRequested());
+                    },
+                    icon: const Icon(Icons.output)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search coffee...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
                 ),
-                itemCount: 6,
-                itemBuilder: (context, index) => const CoffeeItem(),
-              ),
-            ),
-            BottomNavigationBar(
-              selectedItemColor: Colors.brown,
-              unselectedItemColor: Colors.grey,
-              showUnselectedLabels: true,
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_border), label: 'Favorite'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.shopping_cart_outlined), label: 'Cart'),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline), label: 'Profile'),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown[800]),
+                  ),
+                ),
+                const SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(width: 16),
+                      CategoryChip('Popular', isSelected: true),
+                      CategoryChip('Latte'),
+                      CategoryChip('Cappucino'),
+                      CategoryChip('Expresso'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.8,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: 6,
+                    itemBuilder: (context, index) => const CoffeeItem(),
+                  ),
+                ),
+                BottomNavigationBar(
+                  selectedItemColor: Colors.brown,
+                  unselectedItemColor: Colors.grey,
+                  showUnselectedLabels: true,
+                  items: const [
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.home), label: 'Home'),
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.favorite_border), label: 'Favorite'),
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.shopping_cart_outlined),
+                        label: 'Cart'),
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline), label: 'Profile'),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -123,9 +137,9 @@ class CoffeeItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Image.asset('assets/images/coffee.png')
-          ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.asset('assets/images/coffee.png')),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
