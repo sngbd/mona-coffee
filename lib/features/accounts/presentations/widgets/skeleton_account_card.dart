@@ -33,7 +33,7 @@ class SkeletonAccountCard extends StatelessWidget {
           ),
           SizedBox(height: 10),
           ShimmerBlock(
-            height: 30,
+            height: 35,
             width: 500,
             radius: 5,
           ),
@@ -48,7 +48,7 @@ class SkeletonAccountCard extends StatelessWidget {
           ),
           SizedBox(height: 10),
           ShimmerBlock(
-            height: 30,
+            height: 35,
             width: 500,
             radius: 5,
           ),
@@ -63,7 +63,7 @@ class SkeletonAccountCard extends StatelessWidget {
           ),
           SizedBox(height: 20),
           ShimmerBlock(
-            height: 30,
+            height: 35,
             width: 500,
             radius: 5,
           ),
