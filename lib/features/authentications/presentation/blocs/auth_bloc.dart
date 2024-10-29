@@ -36,6 +36,8 @@ class AuthAuthenticated extends AuthState {
 
 class AuthUnauthenticated extends AuthState {}
 
+class AuthInProgress extends AuthState {}
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _firebaseAuth;
 
@@ -54,6 +56,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onAuthStarted(AuthStarted event, Emitter<AuthState> emit) async {
+    emit(AuthInProgress());
+    await Future.delayed(const Duration(seconds: 1));
     final user = _firebaseAuth.currentUser;
     if (user != null) {
       emit(AuthAuthenticated(user));

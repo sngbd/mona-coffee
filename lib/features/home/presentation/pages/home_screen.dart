@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
-import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
 import 'package:mona_coffee/models/categories_model.dart';
 import 'package:mona_coffee/models/menu_items_model.dart';
@@ -19,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const HomeContent(),
+    FavoritesScreen(),
     const CartScreen(),
     const ProfileScreen(),
   ];
@@ -115,11 +115,6 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -160,7 +155,7 @@ class _HomeContentState extends State<HomeContent> {
         fillColor: Colors.white,
         hintText: 'Search coffee',
         hintStyle: TextStyle(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           fontSize: 14,
         ),
         prefixIcon: const Icon(Icons.search, color: Colors.grey),

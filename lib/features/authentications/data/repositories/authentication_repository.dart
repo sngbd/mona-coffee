@@ -49,4 +49,24 @@ class AuthenticationRepository {
     await _google.signOut();
     await _firebaseAuth.signOut();
   }
+
+  Future<void> updateProfile({
+    String? displayName,
+    String? email,
+    String? phoneNumber,
+    String? photoUrl,
+  }) async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      if (displayName != null || photoUrl != null) {
+        await user.updateProfile(displayName: displayName, photoURL: photoUrl);
+      }
+      if (email != null) {
+        await user.verifyBeforeUpdateEmail(email);
+      }
+      // Note: Updating phone number requires re-authentication and a verification process.
+      // await user.updatePhoneNumber(...);
+      await user.reload();
+    }
+  }
 }
