@@ -106,7 +106,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                 ? 'Enter your new password'
                 : 'Confirm your new password',
             hintStyle: TextStyle(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Colors.black.withOpacity(0.4),
               fontSize: 14,
             ),
             border: OutlineInputBorder(

@@ -155,7 +155,7 @@ class _HomeContentState extends State<HomeContent> {
         fillColor: Colors.white,
         hintText: 'Search coffee',
         hintStyle: TextStyle(
-          color: Colors.black.withValues(alpha: 0.4),
+          color: Colors.black.withOpacity(0.4),
           fontSize: 14,
         ),
         prefixIcon: const Icon(Icons.search, color: Colors.grey),

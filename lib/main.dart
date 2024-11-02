@@ -7,6 +7,7 @@ import 'package:mona_coffee/core/utils/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mona_coffee/features/authentications/data/repositories/authentication_repository.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
 import 'firebase_options.dart';
@@ -25,36 +26,38 @@ class MonaCoffeeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authBloc = AuthBloc(FirebaseAuth.instance);
     final authenticationRepository =
         AuthenticationRepository(FirebaseAuth.instance);
 
-    final routerBlocListenable = RouterBlocListenable(authBloc);
+    final authBloc = AuthBloc(FirebaseAuth.instance);
+    final signInBloc = SignInBloc(authenticationRepository);
     authBloc.add(AuthStarted());
+    final signOutBloc = SignOutBloc(authenticationRepository, authBloc);
+    final profileBloc = ProfileBloc(authenticationRepository);
 
+    final RouterBlocListenable routerBlocListenable =
+        RouterBlocListenable(authBloc);
     final appRouter = AppRouter(routerBlocListenable: routerBlocListenable);
 
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider(
-          create: (context) =>
-              AuthBloc(FirebaseAuth.instance)..add(AuthStarted()),
-        ),
-        BlocProvider(
-          create: (context) => SignInBloc(authenticationRepository),
-        ),
-        BlocProvider(
-          create: (context) =>
-              SignOutBloc(authenticationRepository, context.read<AuthBloc>()),
-        ),
+        RepositoryProvider(create: (context) => authenticationRepository),
       ],
-      child: MaterialApp.router(
-        title: 'Mona Coffee App',
-        theme: AppTheme.monaCoffeeTheme(context),
-        routerDelegate: appRouter.router.routerDelegate,
-        routeInformationParser: appRouter.router.routeInformationParser,
-        routeInformationProvider: appRouter.router.routeInformationProvider,
-        debugShowCheckedModeBanner: false,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => authBloc),
+          BlocProvider(create: (context) => signInBloc),
+          BlocProvider(create: (context) => signOutBloc),
+          BlocProvider(create: (context) => profileBloc),
+        ],
+        child: MaterialApp.router(
+          title: 'Mona Coffee App',
+          theme: AppTheme.monaCoffeeTheme(context),
+          routerDelegate: appRouter.router.routerDelegate,
+          routeInformationParser: appRouter.router.routeInformationParser,
+          routeInformationProvider: appRouter.router.routeInformationProvider,
+          debugShowCheckedModeBanner: false,
+        ),
       ),
     );
   }

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -64,9 +67,39 @@ class AuthenticationRepository {
       if (email != null) {
         await user.verifyBeforeUpdateEmail(email);
       }
-      // Note: Updating phone number requires re-authentication and a verification process.
-      // await user.updatePhoneNumber(...);
       await user.reload();
     }
+  }
+
+  Future<String?> getUserAvatar({required String uid}) async {
+    DocumentReference<Map<String, dynamic>> user =
+        FirebaseFirestore.instance.collection('users').doc(uid);
+    Future<String?> avatar =
+        user.get().then((DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.exists) {
+        return documentSnapshot.get('avatar') as String?;
+      }
+      return null;
+    }).catchError((error) {
+      return null;
+    });
+
+    return avatar;
+  }
+
+  Future<String> updateUserAvatar(
+      {required String uid, required String avatar}) async {
+    CollectionReference user = FirebaseFirestore.instance.collection('users');
+
+    return user
+        .add(
+          {'uid': uid, 'avatar': avatar},
+        )
+        .then(
+          (value) => 'Successfully updated avatar',
+        )
+        .catchError(
+          (error) => throw Exception('Failed to update avatar: $error'),
+        );
   }
 }

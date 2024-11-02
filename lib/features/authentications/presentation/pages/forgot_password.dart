@@ -65,7 +65,7 @@ class ForgotPasswordScreen extends StatelessWidget {
             fillColor: Colors.white,
             hintText: 'Enter your email',
             hintStyle: TextStyle(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Colors.black.withOpacity(0.4),
               fontSize: 14,
             ),
             border: OutlineInputBorder(

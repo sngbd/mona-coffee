@@ -7,6 +7,7 @@ import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.da
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/pages/forgot_password.dart';
 import 'package:mona_coffee/features/authentications/presentation/pages/sign_in_form_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/pages/sign_in_screen.dart';
@@ -36,6 +37,7 @@ class AppRouter {
       final authState = context.read<AuthBloc>().state;
 
       if (authState is AuthAuthenticated) {
+        context.read<ProfileBloc>().add(InitializeProfileState());
         return '/home';
       } else if (state is AuthUnauthenticated) {
         return '/';
