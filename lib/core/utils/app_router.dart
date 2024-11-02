@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/router_bloc_listenable.dart';
 import 'package:mona_coffee/core/utils/transition.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/checkout_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
@@ -24,7 +25,7 @@ class AppRouter {
   GoRouter get router => _goRouter;
   late final GoRouter _goRouter = GoRouter(
     refreshListenable: routerBlocListenable,
-    initialLocation: '/',
+    initialLocation: '/checkout',
     routes: configRouter,
     errorBuilder: (context, state) => const Center(
       child: Text(
@@ -112,6 +113,13 @@ final List<GoRoute> configRouter = [
     name: 'cart',
     builder: (BuildContext context, GoRouterState state) {
       return const CartScreen();
+    },
+  ),
+  GoRoute(
+    path: '/checkout',
+    name: 'checkout',
+    builder: (BuildContext context, GoRouterState state) {
+      return const CheckoutScreen();
     },
   ),
   GoRoute(

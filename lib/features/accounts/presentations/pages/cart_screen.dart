@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/models/order_model.dart';
 
@@ -103,59 +104,64 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildOrderCard(Order order) {
-    return Card(
-      color: Colors.white,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: Image.asset(
-                order.imageUrl,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        context.goNamed('checkout');
+      },
+      child: Card(
+        color: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: Image.asset(
+                  order.imageUrl,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    order.orderDate,
-                    style: const TextStyle(color: mBrown),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    order.coffeeName,
-                    style: const TextStyle(
-                      color: mBrown,
-                      fontWeight: FontWeight.bold,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.orderDate,
+                      style: const TextStyle(color: mBrown),
                     ),
-                  ),
-                  Text(
-                    order.type,
-                    style: const TextStyle(color: mBrown),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    '${order.quantity}x',
-                    style: const TextStyle(color: mBrown),
-                  ),
-                ],
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      order.coffeeName,
+                      style: const TextStyle(
+                        color: mBrown,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      order.type,
+                      style: const TextStyle(color: mBrown),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '${order.quantity}x',
+                      style: const TextStyle(color: mBrown),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
