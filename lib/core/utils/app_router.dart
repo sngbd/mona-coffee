@@ -25,7 +25,7 @@ class AppRouter {
   GoRouter get router => _goRouter;
   late final GoRouter _goRouter = GoRouter(
     refreshListenable: routerBlocListenable,
-    initialLocation: '/checkout',
+    initialLocation: '/',
     routes: configRouter,
     errorBuilder: (context, state) => const Center(
       child: Text(
@@ -39,7 +39,7 @@ class AppRouter {
 
       if (authState is AuthAuthenticated) {
         context.read<ProfileBloc>().add(InitializeProfileState());
-        return '/home';
+        return '/checkout';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }
