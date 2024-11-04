@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/widgets/activity_indicator.dart';
+import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/skeleton_account_card.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
@@ -51,9 +52,44 @@ class ProfileScreen extends StatelessWidget {
             ),
             centerTitle: true,
           ),
-          body: BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, state) {
+          body: BlocConsumer<ProfileBloc, ProfileState>(
+            listener: (context, state) {
+              if (state.verifyEmail ?? false) {
+                Flasher.showSnackBar(
+                  context,
+                  'Info',
+                  'Please verify your email',
+                  Icons.info_outline,
+                  Colors.blue,
+                );
+                context.read<ProfileBloc>().add(const ToggleVerifyEmail(false));
+              }
+
+              if (state.status == FormStatusProfile.unauthenticated ||
+                  state.status == FormStatusProfile.failure ||
+                  state.status == FormStatusProfile.invalid) {
+                Flasher.showSnackBar(
+                  context,
+                  'Error',
+                  state.errorMessage ?? '-',
+                  Icons.error_outline,
+                  Colors.red,
+                );
+              }
+
               if (state.status == FormStatusProfile.success) {
+                Flasher.showSnackBar(
+                  context,
+                  'Success',
+                  'Profile updated',
+                  Icons.check_circle_outline,
+                  Colors.green,
+                );
+              }
+            },
+            builder: (context, state) {
+              if (state.status == FormStatusProfile.initial ||
+                  state.status == FormStatusProfile.success) {
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
@@ -74,8 +110,8 @@ class ProfileScreen extends StatelessWidget {
                                     image: DecorationImage(
                                       image: state.avatar != null
                                           ? FileImage(state.avatar!)
-                                          : const NetworkImage(
-                                              'https://via.placeholder.com/150'),
+                                          : const AssetImage(
+                                              'assets/images/blank.png'),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -181,6 +217,7 @@ class ProfileScreen extends StatelessWidget {
                                 .read<ProfileBloc>()
                                 .add(NameProfileChanged(name));
                           },
+                          keyboardType: TextInputType.name,
                           decoration: InputDecoration(
                             labelText: state.name,
                             contentPadding: const EdgeInsets.all(0),
@@ -214,6 +251,7 @@ class ProfileScreen extends StatelessWidget {
                                 .read<ProfileBloc>()
                                 .add(EmailProfileChanged(email));
                           },
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             labelText: state.email,
                             contentPadding: const EdgeInsets.all(0),
@@ -247,6 +285,7 @@ class ProfileScreen extends StatelessWidget {
                                 .read<ProfileBloc>()
                                 .add(PhoneProfileChanged(phone));
                           },
+                          keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
                             labelText: state.phone,
                             contentPadding: const EdgeInsets.all(0),
@@ -297,10 +336,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 );
-              } else if (state.status == FormStatusProfile.unauthenticated) {
-                return Center(child: Text(state.errorMessage!));
-              } else if (state.status == FormStatusProfile.failure) {
-                return Center(child: Text(state.errorMessage!));
               }
               return const SkeletonAccountCard();
             },

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
+import 'package:mona_coffee/features/authentications/data/entities/user_profile.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +37,15 @@ class PhoneProfileChanged extends FormEvent {
   List<Object> get props => [phone];
 }
 
+class ToggleVerifyEmail extends FormEvent {
+  final bool verifyEmail;
+
+  const ToggleVerifyEmail(this.verifyEmail);
+
+  @override
+  List<Object> get props => [verifyEmail];
+}
+
 class InitializeProfileState extends FormEvent {}
 
 class OpenCameraProfileAction extends FormEvent {}
@@ -65,9 +76,9 @@ class ProfileState extends Equatable {
   final AvatarStatusProfile avatarStatus;
   final String? name;
   final String? email;
+  final bool? verifyEmail;
   final String? phone;
   final File? avatar;
-  final String? avatarError;
   final String? errorMessage;
 
   const ProfileState({
@@ -75,9 +86,9 @@ class ProfileState extends Equatable {
     this.avatarStatus = AvatarStatusProfile.initial,
     this.name,
     this.email,
+    this.verifyEmail,
     this.phone,
     this.avatar,
-    this.avatarError,
     this.errorMessage,
   });
 
@@ -86,9 +97,9 @@ class ProfileState extends Equatable {
     AvatarStatusProfile? avatarStatus,
     String? name,
     String? email,
+    bool? verifyEmail,
     String? phone,
     File? avatar,
-    String? avatarError,
     String? errorMessage,
   }) {
     return ProfileState(
@@ -96,9 +107,9 @@ class ProfileState extends Equatable {
       avatarStatus: avatarStatus ?? this.avatarStatus,
       name: name ?? this.name,
       email: email ?? this.email,
+      verifyEmail: verifyEmail ?? this.verifyEmail,
       phone: phone ?? this.phone,
       avatar: avatar ?? this.avatar,
-      avatarError: avatarError,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -109,9 +120,9 @@ class ProfileState extends Equatable {
         avatarStatus,
         name,
         email,
+        verifyEmail,
         phone,
         avatar,
-        avatarError,
         errorMessage,
       ];
 }
@@ -124,22 +135,22 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
       emit(state.copyWith(status: FormStatusProfile.submitting));
 
       try {
-        final user = _authenticationRepository.currentUser;
-        final avatar =
-            await _authenticationRepository.getUserAvatar(uid: user!.uid);
+        final user = await _authenticationRepository.getProfileData();
 
-        final fileAvatar = File((await getTemporaryDirectory()).path);
-        if (avatar != null) {
-          final bytes = base64Decode(avatar);
+        final tempDir = await getTemporaryDirectory();
+        final fileAvatar = File('${tempDir.path}/avatar.png');
+
+        if (user.avatar != null) {
+          final bytes = base64Decode(user.avatar!);
           await fileAvatar.writeAsBytes(bytes);
         }
 
         emit(state.copyWith(
-          name: user.displayName,
+          name: user.name,
           email: user.email,
-          phone: user.phoneNumber,
-          avatar: avatar == null ? null : fileAvatar,
-          status: FormStatusProfile.success,
+          phone: user.phone,
+          avatar: user.avatar == null ? null : fileAvatar,
+          status: FormStatusProfile.initial,
         ));
       } catch (error) {
         emit(state.copyWith(
@@ -173,34 +184,25 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
         emit(state.copyWith(status: FormStatusProfile.submitting));
 
         try {
-          await _authenticationRepository.updateProfile(
-            displayName: state.name,
+          UserProfile userProfile;
+          userProfile = UserProfile(
+            name: state.name,
             email: state.email,
-            phoneNumber: state.phone,
+            phone: state.phone,
           );
-
-          final user = _authenticationRepository.currentUser;
 
           if (state.avatar != null) {
             if (state.avatarStatus == AvatarStatusProfile.update) {
-              final fileAvatar = File(
-                  '${(await getTemporaryDirectory()).path}/temp_avatar.png');
-              final bytes = await fileAvatar.readAsBytes();
+              final bytes = await state.avatar!.readAsBytes();
 
               var avatarString = base64Encode(bytes);
-              await _authenticationRepository.updateUserAvatar(
-                uid: user!.uid,
-                avatar: avatarString,
-              );
+              userProfile.avatar = avatarString;
 
               emit(state.copyWith(
                 avatarStatus: AvatarStatusProfile.initial,
               ));
             } else if (state.avatarStatus == AvatarStatusProfile.remove) {
-              await _authenticationRepository.updateUserAvatar(
-                uid: user!.uid,
-                avatar: "",
-              );
+              userProfile.avatar = null;
 
               emit(state.copyWith(
                 avatarStatus: AvatarStatusProfile.initial,
@@ -208,8 +210,21 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
             }
           }
 
+          final currentUser = _authenticationRepository.currentUser;
+          if (state.email != currentUser!.email) {
+            emit(state.copyWith(
+              verifyEmail: true,
+            ));
+          }
+
+          await _authenticationRepository.updateProfileData(userProfile);
+
           emit(state.copyWith(
             status: FormStatusProfile.success,
+          ));
+
+          emit(state.copyWith(
+            status: FormStatusProfile.initial,
           ));
         } catch (error) {
           emit(state.copyWith(
@@ -224,7 +239,7 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
       } else {
         emit(state.copyWith(
           status: FormStatusProfile.invalid,
-          avatarError: avatarError,
+          errorMessage: avatarError,
         ));
       }
     });
@@ -258,9 +273,20 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
     });
 
     on<RemoveImageProfileAction>((event, emit) async {
+      final byteData = await rootBundle.load('assets/images/blank.png');
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/temp_asset.png');
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+
       emit(state.copyWith(
-        avatar: null,
+        avatar: file,
         avatarStatus: AvatarStatusProfile.remove,
+      ));
+    });
+
+    on<ToggleVerifyEmail>((event, emit) {
+      emit(state.copyWith(
+        verifyEmail: event.verifyEmail,
       ));
     });
   }

@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:logger/web.dart';
+import 'package:mona_coffee/features/authentications/data/entities/user_profile.dart';
 
 class AuthenticationRepository {
   final FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _google = GoogleSignIn();
 
   AuthenticationRepository(this._firebaseAuth);
@@ -29,6 +32,66 @@ class AuthenticationRepository {
   }
 
   User? get currentUser => _firebaseAuth.currentUser;
+  void get refreshUser async => await currentUser!.reload();
+
+  Future<UserProfile> getProfileData() async {
+    if (currentUser == null) {
+      throw Exception('User is not authenticated');
+    }
+    refreshUser;
+    _firestore.clearPersistence();
+
+    final UserProfile userProfile = UserProfile(
+      name: currentUser!.displayName,
+      email: currentUser!.email,
+      phone: null,
+      avatar: null,
+    );
+
+    final DocumentReference<Map<String, dynamic>> userRef =
+        _firestore.collection('users').doc(currentUser!.uid);
+    final DocumentSnapshot<Map<String, dynamic>> documentSnapshot =
+        await userRef.get();
+
+    try {
+      if (documentSnapshot.exists) {
+        userProfile.avatar = documentSnapshot.data()?['avatar'];
+        userProfile.phone = documentSnapshot.data()?['phone'];
+      } else {
+        Logger().e('Document does not exist');
+      }
+    } catch (error) {
+      Logger().e('Error getting user data: $error');
+    }
+
+    return userProfile;
+  }
+
+  Future<void> updateProfileData(UserProfile userProfile) async {
+    if (currentUser == null) {
+      throw Exception('User is not authenticated');
+    }
+
+    if (userProfile.name != null) {
+      await currentUser!.updateProfile(displayName: userProfile.name);
+    }
+    if (userProfile.email != null) {
+      await currentUser!.verifyBeforeUpdateEmail(userProfile.email!);
+    }
+
+    final DocumentReference userRef =
+        _firestore.collection('users').doc(currentUser!.uid);
+    await userRef
+        .set({
+          'avatar': userProfile.avatar,
+          'phone': userProfile.phone,
+        }, SetOptions(merge: true))
+        .then((value) => 'Successfully updated avatar')
+        .catchError(
+            (error) => throw Exception('Failed to update avatar: $error'));
+
+    refreshUser;
+  }
 
   Future<UserCredential> signInWithGoogle() async {
     try {
@@ -51,55 +114,5 @@ class AuthenticationRepository {
   Future<void> signOutGoogle() async {
     await _google.signOut();
     await _firebaseAuth.signOut();
-  }
-
-  Future<void> updateProfile({
-    String? displayName,
-    String? email,
-    String? phoneNumber,
-    String? photoUrl,
-  }) async {
-    final user = _firebaseAuth.currentUser;
-    if (user != null) {
-      if (displayName != null || photoUrl != null) {
-        await user.updateProfile(displayName: displayName, photoURL: photoUrl);
-      }
-      if (email != null) {
-        await user.verifyBeforeUpdateEmail(email);
-      }
-      await user.reload();
-    }
-  }
-
-  Future<String?> getUserAvatar({required String uid}) async {
-    DocumentReference<Map<String, dynamic>> user =
-        FirebaseFirestore.instance.collection('users').doc(uid);
-    Future<String?> avatar =
-        user.get().then((DocumentSnapshot documentSnapshot) {
-      if (documentSnapshot.exists) {
-        return documentSnapshot.get('avatar') as String?;
-      }
-      return null;
-    }).catchError((error) {
-      return null;
-    });
-
-    return avatar;
-  }
-
-  Future<String> updateUserAvatar(
-      {required String uid, required String avatar}) async {
-    CollectionReference user = FirebaseFirestore.instance.collection('users');
-
-    return user
-        .add(
-          {'uid': uid, 'avatar': avatar},
-        )
-        .then(
-          (value) => 'Successfully updated avatar',
-        )
-        .catchError(
-          (error) => throw Exception('Failed to update avatar: $error'),
-        );
   }
 }
