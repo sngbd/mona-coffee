@@ -5,6 +5,7 @@ import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/widgets/activity_indicator.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/skeleton_account_card.dart';
+import 'package:mona_coffee/features/accounts/presentations/widgets/skeleton_google_account_card.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
 
@@ -117,88 +118,107 @@ class ProfileScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              Positioned(
-                                bottom: 0,
-                                right: 15,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return Dialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(16),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Text(
-                                                  'Choose image source',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                              state.authMethod == AuthMethodProfile.isEmail
+                                  ? Positioned(
+                                      bottom: 0,
+                                      right: 15,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return Dialog(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
                                                 ),
-                                                const SizedBox(height: 20),
-                                                ListTile(
-                                                  title: const Text('Gallery'),
-                                                  onTap: () {
-                                                    context.read<ProfileBloc>().add(
-                                                        OpenGalleryProfileAction());
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                                ListTile(
-                                                  title: const Text('Camera'),
-                                                  onTap: () {
-                                                    context.read<ProfileBloc>().add(
-                                                        OpenCameraProfileAction());
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                                context
-                                                            .read<ProfileBloc>()
-                                                            .state
-                                                            .avatar ==
-                                                        null
-                                                    ? const SizedBox.shrink()
-                                                    : ListTile(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      16.0),
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      const Text(
+                                                        'Choose image source',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 20),
+                                                      ListTile(
                                                         title: const Text(
-                                                            'Remove'),
+                                                            'Gallery'),
                                                         onTap: () {
                                                           context
                                                               .read<
                                                                   ProfileBloc>()
                                                               .add(
-                                                                  RemoveImageProfileAction());
+                                                                  OpenGalleryProfileAction());
                                                           Navigator.of(context)
                                                               .pop();
                                                         },
                                                       ),
-                                              ],
-                                            ),
+                                                      ListTile(
+                                                        title: const Text(
+                                                            'Camera'),
+                                                        onTap: () {
+                                                          context
+                                                              .read<
+                                                                  ProfileBloc>()
+                                                              .add(
+                                                                  OpenCameraProfileAction());
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                      ),
+                                                      context
+                                                                  .read<
+                                                                      ProfileBloc>()
+                                                                  .state
+                                                                  .avatar ==
+                                                              null
+                                                          ? const SizedBox
+                                                              .shrink()
+                                                          : ListTile(
+                                                              title: const Text(
+                                                                  'Remove'),
+                                                              onTap: () {
+                                                                context
+                                                                    .read<
+                                                                        ProfileBloc>()
+                                                                    .add(
+                                                                        RemoveImageProfileAction());
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              },
+                                                            ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: const BoxDecoration(
+                                            color: mBrown,
+                                            shape: BoxShape.circle,
                                           ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      color: mBrown,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                                          child: const Icon(
+                                            Icons.edit,
+                                            color: Colors.white,
+                                            size: 25,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
                             ],
                           ),
                         ),
@@ -217,9 +237,11 @@ class ProfileScreen extends StatelessWidget {
                                 .read<ProfileBloc>()
                                 .add(NameProfileChanged(name));
                           },
+                          readOnly:
+                              state.authMethod == AuthMethodProfile.isGoogle,
                           keyboardType: TextInputType.name,
+                          controller: TextEditingController(text: state.name!),
                           decoration: InputDecoration(
-                            labelText: state.name,
                             contentPadding: const EdgeInsets.all(0),
                             filled: true,
                             fillColor: Colors.transparent,
@@ -231,9 +253,13 @@ class ProfileScreen extends StatelessWidget {
                               borderSide: BorderSide(
                                   color: Color.fromARGB(255, 58, 58, 58)),
                             ),
-                            focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: mBrown),
-                            ),
+                            focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: state.authMethod ==
+                                            AuthMethodProfile.isEmail
+                                        ? mBrown
+                                        : const Color.fromARGB(
+                                            255, 58, 58, 58))),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -251,9 +277,11 @@ class ProfileScreen extends StatelessWidget {
                                 .read<ProfileBloc>()
                                 .add(EmailProfileChanged(email));
                           },
+                          readOnly:
+                              state.authMethod == AuthMethodProfile.isGoogle,
                           keyboardType: TextInputType.emailAddress,
+                          controller: TextEditingController(text: state.email!),
                           decoration: InputDecoration(
-                            labelText: state.email,
                             contentPadding: const EdgeInsets.all(0),
                             filled: true,
                             fillColor: Colors.transparent,
@@ -265,79 +293,101 @@ class ProfileScreen extends StatelessWidget {
                               borderSide: BorderSide(
                                   color: Color.fromARGB(255, 58, 58, 58)),
                             ),
-                            focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: mBrown),
-                            ),
+                            focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: state.authMethod ==
+                                            AuthMethodProfile.isEmail
+                                        ? mBrown
+                                        : const Color.fromARGB(
+                                            255, 58, 58, 58))),
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Phone Number',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: mDarkBrown,
-                          ),
-                        ),
-                        TextField(
-                          onChanged: (phone) {
-                            context
-                                .read<ProfileBloc>()
-                                .add(PhoneProfileChanged(phone));
-                          },
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            labelText: state.phone,
-                            contentPadding: const EdgeInsets.all(0),
-                            filled: true,
-                            fillColor: Colors.transparent,
-                            hintStyle: TextStyle(
-                              color: Colors.black.withOpacity(0.4),
-                              fontSize: 14,
-                            ),
-                            enabledBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Color.fromARGB(255, 58, 58, 58)),
-                            ),
-                            focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: mBrown),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        Center(
-                          child: SizedBox(
-                            width: 180,
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                context
-                                    .read<ProfileBloc>()
-                                    .add(FormProfileSubmitted());
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: mBrown,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text(
-                                'Save',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                        state.authMethod == AuthMethodProfile.isEmail
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Phone Number',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: mDarkBrown,
+                                    ),
+                                  ),
+                                  TextField(
+                                    onChanged: (phone) {
+                                      context
+                                          .read<ProfileBloc>()
+                                          .add(PhoneProfileChanged(phone));
+                                    },
+                                    controller: TextEditingController(
+                                        text: state.phone!),
+                                    keyboardType: TextInputType.phone,
+                                    decoration: InputDecoration(
+                                      contentPadding: const EdgeInsets.all(0),
+                                      filled: true,
+                                      fillColor: Colors.transparent,
+                                      hintStyle: TextStyle(
+                                        color: Colors.black.withOpacity(0.4),
+                                        fontSize: 14,
+                                      ),
+                                      enabledBorder: const UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color.fromARGB(
+                                                255, 58, 58, 58)),
+                                      ),
+                                      focusedBorder: const UnderlineInputBorder(
+                                        borderSide: BorderSide(color: mBrown),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              )
+                            : const SizedBox.shrink(),
+                        state.authMethod == AuthMethodProfile.isEmail
+                            ? Column(
+                                children: [
+                                  const SizedBox(height: 40),
+                                  Center(
+                                    child: SizedBox(
+                                      width: 180,
+                                      height: 48,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          context
+                                              .read<ProfileBloc>()
+                                              .add(FormProfileSubmitted());
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: mBrown,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Save',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              )
+                            : const SizedBox.shrink(),
                       ],
                     ),
                   ),
                 );
               }
-              return const SkeletonAccountCard();
+              return state.authMethod == AuthMethodProfile.isEmail
+                  ? const SkeletonAccountCard()
+                  : const SkeletonGoogleAccountCard();
             },
           ),
         ),

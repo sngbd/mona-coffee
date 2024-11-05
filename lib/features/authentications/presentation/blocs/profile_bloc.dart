@@ -71,9 +71,15 @@ enum AvatarStatusProfile {
   remove,
 }
 
+enum AuthMethodProfile {
+  isGoogle,
+  isEmail,
+}
+
 class ProfileState extends Equatable {
   final FormStatusProfile status;
   final AvatarStatusProfile avatarStatus;
+  final AuthMethodProfile authMethod;
   final String? name;
   final String? email;
   final bool? verifyEmail;
@@ -84,6 +90,7 @@ class ProfileState extends Equatable {
   const ProfileState({
     this.status = FormStatusProfile.initial,
     this.avatarStatus = AvatarStatusProfile.initial,
+    this.authMethod = AuthMethodProfile.isEmail,
     this.name,
     this.email,
     this.verifyEmail,
@@ -95,6 +102,7 @@ class ProfileState extends Equatable {
   ProfileState copyWith({
     FormStatusProfile? status,
     AvatarStatusProfile? avatarStatus,
+    AuthMethodProfile? authMethod,
     String? name,
     String? email,
     bool? verifyEmail,
@@ -105,6 +113,7 @@ class ProfileState extends Equatable {
     return ProfileState(
       status: status ?? this.status,
       avatarStatus: avatarStatus ?? this.avatarStatus,
+      authMethod: authMethod ?? this.authMethod,
       name: name ?? this.name,
       email: email ?? this.email,
       verifyEmail: verifyEmail ?? this.verifyEmail,
@@ -118,6 +127,7 @@ class ProfileState extends Equatable {
   List<Object?> get props => [
         status,
         avatarStatus,
+        authMethod,
         name,
         email,
         verifyEmail,
@@ -135,6 +145,9 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
       emit(state.copyWith(status: FormStatusProfile.submitting));
 
       try {
+        final isGoogle =
+            await _authenticationRepository.isUserLoggedInWithGoogle();
+
         final user = await _authenticationRepository.getProfileData();
 
         final tempDir = await getTemporaryDirectory();
@@ -150,6 +163,8 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
           email: user.email,
           phone: user.phone,
           avatar: user.avatar == null ? null : fileAvatar,
+          authMethod:
+              isGoogle ? AuthMethodProfile.isGoogle : AuthMethodProfile.isEmail,
           status: FormStatusProfile.initial,
         ));
       } catch (error) {

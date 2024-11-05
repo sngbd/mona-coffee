@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/web.dart';
 import 'package:mona_coffee/features/authentications/data/entities/user_profile.dart';
+import 'package:http/http.dart' as http;
 
 class AuthenticationRepository {
   final FirebaseAuth _firebaseAuth;
@@ -28,18 +30,56 @@ class AuthenticationRepository {
   }
 
   Future<void> signOut() async {
+    final isGoogle = await isUserLoggedInWithGoogle();
+    if (isGoogle) {
+      await _google.signOut();
+    }
     await _firebaseAuth.signOut();
   }
 
   User? get currentUser => _firebaseAuth.currentUser;
   void get refreshUser async => await currentUser!.reload();
 
+  Future<bool> isUserLoggedInWithGoogle() async {
+    final user = currentUser;
+    if (user != null) {
+      for (var userInfo in user.providerData) {
+        if (userInfo.providerId == 'google.com') {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   Future<UserProfile> getProfileData() async {
     if (currentUser == null) {
       throw Exception('User is not authenticated');
     }
     refreshUser;
-    _firestore.clearPersistence();
+
+    final bool isGoogle = await isUserLoggedInWithGoogle();
+    if (isGoogle) {
+      final response = await http.get(Uri.parse(
+          currentUser!.photoURL ?? 'https://via.placeholder.com/150'));
+      String avatar;
+
+      if (response.statusCode == 200) {
+        final bytes = response.bodyBytes;
+        avatar = base64Encode(bytes);
+      } else {
+        throw Exception('Failed to download file');
+      }
+
+      final UserProfile userProfile = UserProfile(
+        name: currentUser!.displayName,
+        email: currentUser!.email,
+        phone: null,
+        avatar: avatar,
+      );
+
+      return userProfile;
+    }
 
     final UserProfile userProfile = UserProfile(
       name: currentUser!.displayName,
@@ -109,10 +149,5 @@ class AuthenticationRepository {
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message);
     }
-  }
-
-  Future<void> signOutGoogle() async {
-    await _google.signOut();
-    await _firebaseAuth.signOut();
   }
 }

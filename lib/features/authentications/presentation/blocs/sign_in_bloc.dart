@@ -33,8 +33,6 @@ class FormSignInSubmitted extends FormEvent {}
 
 class GoogleSignInSubmitted extends FormEvent {}
 
-class GoogleSignOutSubmitted extends FormEvent {}
-
 class SignInState extends Equatable {
   final String email;
   final String password;
@@ -147,27 +145,12 @@ class SignInBloc extends Bloc<FormEvent, SignInState> {
     });
 
     on<GoogleSignInSubmitted>((event, emit) async {
+      emit(state.copyWith(
+        status: FormStatusSignIn.submitting,
+      ));
+
       try {
         await _authenticationRepository.signInWithGoogle();
-
-        emit(state.copyWith(
-          status: FormStatusSignIn.success,
-        ));
-      } catch (error) {
-        emit(state.copyWith(
-          status: FormStatusSignIn.failure,
-          errorMessage: error.toString(),
-        ));
-
-        emit(state.copyWith(
-          status: FormStatusSignIn.invalid,
-        ));
-      }
-    });
-
-    on<GoogleSignOutSubmitted>((event, emit) async {
-      try {
-        await _authenticationRepository.signOutGoogle();
 
         emit(state.copyWith(
           status: FormStatusSignIn.success,
