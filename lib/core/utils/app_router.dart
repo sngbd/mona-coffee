@@ -5,7 +5,9 @@ import 'package:mona_coffee/core/utils/router_bloc_listenable.dart';
 import 'package:mona_coffee/core/utils/transition.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/checkout_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payment_success_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
@@ -39,7 +41,7 @@ class AppRouter {
 
       if (authState is AuthAuthenticated) {
         context.read<ProfileBloc>().add(InitializeProfileState());
-        return '/checkout';
+        return '/delivery_payment_success';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }
@@ -141,6 +143,20 @@ final List<GoRoute> configRouter = [
     name: 'new_password',
     builder: (BuildContext context, GoRouterState state) {
       return const NewPasswordScreen();
+    },
+  ),
+  GoRoute(
+    path: '/update_order',
+    name: 'update_order',
+    builder: (BuildContext context, GoRouterState state) {
+      return const UpdateOrderScreen();
+    },
+  ),
+  GoRoute(
+    path: '/delivery_payment_success',
+    name: 'delivery_payment_success',
+    builder: (BuildContext context, GoRouterState state) {
+      return const DeliveryPaymentSuccessScreen();
     },
   ),
 ];

@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/accounts/presentations/payments/bank_selection_dialog.dart';
+import 'package:mona_coffee/features/accounts/presentations/payments/qris_selection_dialog.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/delivery_method_selector.dart';
+import 'package:mona_coffee/features/accounts/presentations/payments/ewallet_selection_dialog.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -13,6 +17,13 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   String? _selectedTemperature;
+  String _selectedDeliveryMethod = 'Delivery';
+
+  final Map<String, String> _deliveryIcons = {
+    'Delivery': 'assets/icons/delivery_icon.svg',
+    'Take-away': 'assets/icons/take_away_icon.svg',
+    'Dine-in': 'assets/icons/dine_in_icon.svg',
+  };
 
   String deliveryAddress = 'No saved address';
 
@@ -79,13 +90,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/icons/delivery_icon.svg',
+                _deliveryIcons[_selectedDeliveryMethod] ??
+                    _deliveryIcons['Delivery']!,
                 width: 24,
                 height: 24,
               ),
               const SizedBox(width: 8),
-              const Text('Delivery',
-                  style: TextStyle(color: mBrown, fontWeight: FontWeight.w600)),
+              Text(
+                _selectedDeliveryMethod,
+                style:
+                    const TextStyle(color: mBrown, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
           _buildChangeButton(() {}),
@@ -311,7 +326,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            context.goNamed('update_order');
+          },
           child: const Text('Edit',
               style: TextStyle(color: mBrown, fontWeight: FontWeight.w600)),
         ),
@@ -347,7 +364,51 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildPaymentButton(String label) {
     return Expanded(
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          if (label == 'E-banking') {
+            showDialog(
+              context: context,
+              builder: (context) => BankSelectionDialog(
+                amount: 67000,
+                onBankSelected: (bank) {
+                  // Handle bank selection here
+                  // You can add more logic here, like navigating to the next screen
+                },
+                onCancel: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            );
+          } else if (label == 'E-wallet') {
+            showDialog(
+              context: context,
+              builder: (context) => EWalletSelectionDialog(
+                amount: 67000,
+                onEWalletSelected: (wallet) {
+                  // Handle e-wallet selection here
+                  // Tambahkan logika pemrosesan e-wallet di sini
+                },
+                onCancel: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            );
+          } else if (label == 'QRIS') {
+            // Get the total amount from your order details
+            double totalAmount = 67000;
+
+            showDialog(
+              context: context,
+              builder: (context) => QRISSelectionDialog(
+                amount: totalAmount,
+                onCancel: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            );
+          }
+          // Handle other payment methods here
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: mBrown,
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -406,8 +467,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (context) => DeliveryMethodSelector(
+            currentMethod: _selectedDeliveryMethod,
             onMethodSelected: (method) {
-              // Handle method selection here
+              setState(() {
+                _selectedDeliveryMethod = method;
+              });
               if (kDebugMode) {
                 print('Selected method: $method');
               }

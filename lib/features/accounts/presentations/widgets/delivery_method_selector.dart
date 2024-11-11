@@ -1,13 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 
-class DeliveryMethodSelector extends StatelessWidget {
+class DeliveryMethodSelector extends StatefulWidget {
   final Function(String) onMethodSelected;
+  final String currentMethod;
 
   const DeliveryMethodSelector({
     super.key,
     required this.onMethodSelected,
+    required this.currentMethod,
   });
+
+  @override
+  State<DeliveryMethodSelector> createState() => _DeliveryMethodSelectorState();
+}
+
+class _DeliveryMethodSelectorState extends State<DeliveryMethodSelector> {
+  late String selectedMethod;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedMethod =
+        widget.currentMethod;
+  }
+
+  void _handleMethodSelection(String method) {
+    setState(() {
+      selectedMethod = method;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,24 +53,24 @@ class DeliveryMethodSelector extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _buildOptionButton(
-            icon: Icons.delivery_dining,
+            svgPath: 'assets/icons/delivery_icon.svg',
             label: 'Delivery',
-            isSelected: true,
-            onTap: () => onMethodSelected('Delivery'),
+            isSelected: selectedMethod == 'Delivery',
+            onTap: () => _handleMethodSelection('Delivery'),
           ),
           const SizedBox(height: 12),
           _buildOptionButton(
-            icon: Icons.shopping_bag,
+            svgPath: 'assets/icons/take_away_icon.svg',
             label: 'Take-away',
-            isSelected: false,
-            onTap: () => onMethodSelected('Take-away'),
+            isSelected: selectedMethod == 'Take-away',
+            onTap: () => _handleMethodSelection('Take-away'),
           ),
           const SizedBox(height: 12),
           _buildOptionButton(
-            icon: Icons.restaurant,
+            svgPath: 'assets/icons/dine_in_icon.svg',
             label: 'Dine-in',
-            isSelected: false,
-            onTap: () => onMethodSelected('Dine-in'),
+            isSelected: selectedMethod == 'Dine-in',
+            onTap: () => _handleMethodSelection('Dine-in'),
           ),
           const SizedBox(height: 20),
           Padding(
@@ -73,7 +96,11 @@ class DeliveryMethodSelector extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      widget.onMethodSelected(
+                          selectedMethod);
+                      Navigator.pop(context);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: mBrown,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -97,7 +124,7 @@ class DeliveryMethodSelector extends StatelessWidget {
   }
 
   Widget _buildOptionButton({
-    required IconData icon,
+    required String svgPath,
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
@@ -117,9 +144,14 @@ class DeliveryMethodSelector extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: isSelected ? mBrown : Colors.grey,
+              SvgPicture.asset(
+                svgPath,
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  isSelected ? mBrown : Colors.grey,
+                  BlendMode.srcIn,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
