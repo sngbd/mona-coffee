@@ -6,7 +6,9 @@ import 'package:mona_coffee/core/utils/transition.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/checkout_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payment_success_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/dinein_seat_receive_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/order_status_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
@@ -41,7 +43,7 @@ class AppRouter {
 
       if (authState is AuthAuthenticated) {
         context.read<ProfileBloc>().add(InitializeProfileState());
-        return '/delivery_payment_success';
+        return '/checkout';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }
@@ -157,6 +159,22 @@ final List<GoRoute> configRouter = [
     name: 'delivery_payment_success',
     builder: (BuildContext context, GoRouterState state) {
       return const DeliveryPaymentSuccessScreen();
+    },
+  ),
+  GoRoute(
+    path: '/dinein_seat_receive',
+    name: 'dinein_seat_receive',
+    builder: (BuildContext context, GoRouterState state) {
+      return const DineInSeatReceiveScreen(
+        seatNumber: '3A',
+      );
+    },
+  ),
+  GoRoute(
+    path: '/order_status',
+    name: 'order_status',
+    builder: (BuildContext context, GoRouterState state) {
+      return const OrderStatusDetailScreen();
     },
   ),
 ];

@@ -26,6 +26,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   };
 
   String deliveryAddress = 'No saved address';
+  TimeOfDay? selectedTime;
 
   bool isEditing = false;
 
@@ -35,6 +36,48 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void dispose() {
     _addressController.dispose();
     super.dispose();
+  }
+
+  // Fungsi untuk menampilkan time picker
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            timePickerTheme: const TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteTextColor: mDarkBrown,
+              dayPeriodTextColor: mDarkBrown,
+              dialHandColor: mBrown,
+              dialBackgroundColor: mLightPink,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: mBrown,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != selectedTime) {
+      setState(() {
+        selectedTime = picked;
+      });
+    }
+  }
+
+  // Format waktu untuk ditampilkan
+  String _formatTime(TimeOfDay? time) {
+    if (time == null) return 'Select time to visit';
+    final hour = time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
   }
 
   @override
@@ -110,16 +153,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildDeliveryAddress() {
+    final bool isDelivery = _selectedDeliveryMethod == 'Delivery';
+    final String title = isDelivery ? 'Deliver to:' : 'Time to come to resto:';
+
     return _buildSectionContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.location_on, color: mBrown),
-              SizedBox(width: 8),
-              Text('Deliver to:',
-                  style: TextStyle(
+              Icon(isDelivery ? Icons.location_on : Icons.access_time_filled,
+                  color: mBrown),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: const TextStyle(
                       color: mDarkBrown, fontWeight: FontWeight.w600)),
             ],
           ),
@@ -127,48 +174,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: isEditing
-                    ? TextField(
-                        controller: _addressController,
-                        style: const TextStyle(color: mDarkBrown),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your address',
-                          hintStyle: TextStyle(color: mDarkBrown),
-                          border: InputBorder.none,
+              if (isDelivery)
+                Expanded(
+                  child: isEditing
+                      ? TextField(
+                          controller: _addressController,
+                          style: const TextStyle(color: mDarkBrown),
+                          decoration: const InputDecoration(
+                            hintText: 'Enter your address',
+                            hintStyle: TextStyle(color: mDarkBrown),
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (value) {
+                            setState(() {
+                              if (value.isNotEmpty) {
+                                deliveryAddress = value;
+                              }
+                              isEditing = false;
+                            });
+                          },
+                        )
+                      : Text(
+                          deliveryAddress,
+                          style: const TextStyle(color: mDarkBrown),
                         ),
-                        onSubmitted: (value) {
-                          setState(() {
-                            if (value.isNotEmpty) {
-                              deliveryAddress = value;
-                            }
-                            isEditing = false;
-                          });
-                        },
-                      )
-                    : Text(
-                        deliveryAddress,
-                        style: const TextStyle(color: mDarkBrown),
-                      ),
-              ),
+                )
+              else
+                Expanded(
+                  child: Text(
+                    _formatTime(selectedTime),
+                    style: const TextStyle(color: mDarkBrown),
+                  ),
+                ),
               TextButton(
                 onPressed: () {
-                  setState(() {
-                    if (isEditing) {
-                      // Save the changes
-                      if (_addressController.text.isNotEmpty) {
-                        deliveryAddress = _addressController.text;
+                  if (isDelivery) {
+                    setState(() {
+                      if (isEditing) {
+                        // Save the changes
+                        if (_addressController.text.isNotEmpty) {
+                          deliveryAddress = _addressController.text;
+                        }
+                        isEditing = false;
+                      } else {
+                        // Start editing
+                        _addressController.text = deliveryAddress;
+                        isEditing = true;
                       }
-                      isEditing = false;
-                    } else {
-                      // Start editing
-                      _addressController.text = deliveryAddress;
-                      isEditing = true;
-                    }
-                  });
+                    });
+                  } else {
+                    _selectTime(context);
+                  }
                 },
                 child: Text(
-                  isEditing ? 'Save' : 'Edit',
+                  isDelivery ? (isEditing ? 'Save' : 'Edit') : 'Edit',
                   style: const TextStyle(
                       color: mBrown, fontWeight: FontWeight.w600),
                 ),
