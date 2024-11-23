@@ -67,12 +67,20 @@ final List<GoRoute> configRouter = [
         routes: <RouteBase>[
           // Stack 3 - Login Form Screen
           GoRoute(
-            path: '/login-form',
-            name: 'login-form',
-            pageBuilder: (BuildContext context, GoRouterState state) {
-              return slideFromRight(state, const LoginFormScreen());
-            },
-          ),
+              path: '/login-form',
+              name: 'login-form',
+              pageBuilder: (BuildContext context, GoRouterState state) {
+                return slideFromRight(state, const LoginFormScreen());
+              },
+              routes: [
+                GoRoute(
+                  path: '/login-form-forgot-password',
+                  name: 'login-form-forgot-password',
+                  pageBuilder: (BuildContext context, GoRouterState state) {
+                    return slideFromRight(state, const ForgotPasswordScreen());
+                  },
+                ),
+              ]),
           GoRoute(
             path: '/sign-up',
             name: 'sign-up',
@@ -119,13 +127,6 @@ final List<GoRoute> configRouter = [
     name: 'profile',
     builder: (BuildContext context, GoRouterState state) {
       return const ProfileScreen();
-    },
-  ),
-  GoRoute(
-    path: '/forgot_password',
-    name: 'forgot_password',
-    builder: (BuildContext context, GoRouterState state) {
-      return const ForgotPasswordScreen();
     },
   ),
   GoRoute(

@@ -29,6 +29,24 @@ class AuthenticationRepository {
     }
   }
 
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _google.signIn();
+
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+
+      return await _firebaseAuth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message);
+    }
+  }
+
   Future<void> signOut() async {
     final isGoogle = await isUserLoggedInWithGoogle();
     if (isGoogle) {
@@ -133,21 +151,8 @@ class AuthenticationRepository {
     refreshUser;
   }
 
-  Future<UserCredential> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _google.signIn();
-
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
-      );
-
-      return await _firebaseAuth.signInWithCredential(credential);
-    } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
-    }
+  Future<void> sendResetPassword(String email) async {
+    Logger().i('Sending password reset email to $email');
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
   }
 }

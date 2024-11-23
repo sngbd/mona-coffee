@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:mona_coffee/core/event/bloc_event.dart';
@@ -33,6 +34,8 @@ class FormSignInSubmitted extends FormEvent {}
 
 class GoogleSignInSubmitted extends FormEvent {}
 
+class ResetFormSignIn extends FormEvent {}
+
 class SignInState extends Equatable {
   final String email;
   final String password;
@@ -41,8 +44,9 @@ class SignInState extends Equatable {
   final String? emailError;
   final String? passwordError;
   final String? errorMessage;
+  final GlobalKey<FormState> formKey;
 
-  const SignInState({
+  SignInState({
     this.email = '',
     this.password = '',
     this.status = FormStatusSignIn.initial,
@@ -50,7 +54,8 @@ class SignInState extends Equatable {
     this.emailError,
     this.passwordError,
     this.errorMessage,
-  });
+    GlobalKey<FormState>? formKey,
+  }) : formKey = formKey ?? GlobalKey<FormState>();
 
   SignInState copyWith({
     String? email,
@@ -62,6 +67,7 @@ class SignInState extends Equatable {
     String? passwordError,
     String? confirmPasswordError,
     String? errorMessage,
+    GlobalKey<FormState>? formKey,
   }) {
     return SignInState(
       email: email ?? this.email,
@@ -71,6 +77,7 @@ class SignInState extends Equatable {
       emailError: emailError,
       passwordError: passwordError,
       errorMessage: errorMessage ?? this.errorMessage,
+      formKey: formKey ?? this.formKey,
     );
   }
 
@@ -83,13 +90,14 @@ class SignInState extends Equatable {
         emailError,
         passwordError,
         errorMessage,
+        formKey,
       ];
 }
 
 class SignInBloc extends Bloc<FormEvent, SignInState> {
   final AuthenticationRepository _authenticationRepository;
 
-  SignInBloc(this._authenticationRepository) : super(const SignInState()) {
+  SignInBloc(this._authenticationRepository) : super(SignInState()) {
     on<EmailSignInChanged>((event, emit) {
       emit(state.copyWith(
         email: event.email,
@@ -165,6 +173,10 @@ class SignInBloc extends Bloc<FormEvent, SignInState> {
           status: FormStatusSignIn.invalid,
         ));
       }
+    });
+
+    on<ResetFormSignIn>((event, emit) {
+      emit(SignInState());
     });
   }
 

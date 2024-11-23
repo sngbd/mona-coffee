@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,6 +48,8 @@ enum FormStatusSignUp { initial, invalid, submitting, success, failure }
 
 class FormSignUpSubmitted extends FormEvent {}
 
+class ResetFormSignUp extends FormEvent {}
+
 class SignUpState extends Equatable {
   final String email;
   final String password;
@@ -58,8 +61,9 @@ class SignUpState extends Equatable {
   final String? passwordError;
   final String? confirmPasswordError;
   final String? errorMessage;
+  final GlobalKey<FormState> formKey;
 
-  const SignUpState({
+  SignUpState({
     this.email = '',
     this.password = '',
     this.confirmPassword = '',
@@ -70,7 +74,8 @@ class SignUpState extends Equatable {
     this.passwordError,
     this.confirmPasswordError,
     this.errorMessage,
-  });
+    GlobalKey<FormState>? formKey,
+  }) : formKey = formKey ?? GlobalKey<FormState>();
 
   SignUpState copyWith({
     String? email,
@@ -83,6 +88,7 @@ class SignUpState extends Equatable {
     String? passwordError,
     String? confirmPasswordError,
     String? errorMessage,
+    GlobalKey<FormState>? formKey,
   }) {
     return SignUpState(
       email: email ?? this.email,
@@ -96,6 +102,7 @@ class SignUpState extends Equatable {
       passwordError: passwordError,
       confirmPasswordError: confirmPasswordError,
       errorMessage: errorMessage ?? this.errorMessage,
+      formKey: formKey ?? this.formKey,
     );
   }
 
@@ -111,13 +118,14 @@ class SignUpState extends Equatable {
         passwordError,
         confirmPasswordError,
         errorMessage,
+        formKey,
       ];
 }
 
 class SignUpBloc extends Bloc<FormEvent, SignUpState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  SignUpBloc() : super(const SignUpState()) {
+  SignUpBloc() : super(SignUpState()) {
     on<EmailSignUpChanged>((event, emit) {
       emit(state.copyWith(
         email: event.email,
@@ -189,6 +197,10 @@ class SignUpBloc extends Bloc<FormEvent, SignUpState> {
           confirmPasswordError: confirmPasswordError,
         ));
       }
+    });
+
+    on<ResetFormSignUp>((event, emit) {
+      emit(SignUpState());
     });
   }
 

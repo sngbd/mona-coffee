@@ -151,7 +151,7 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
         final user = await _authenticationRepository.getProfileData();
 
         final tempDir = await getTemporaryDirectory();
-        final fileAvatar = File('${tempDir.path}/avatar.png');
+        final fileAvatar = File('${tempDir.path}/${user.email}.png');
 
         if (user.avatar != null) {
           final bytes = base64Decode(user.avatar!);

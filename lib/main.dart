@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:mona_coffee/features/authentications/data/repositories/authentication_repository.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/reset_password_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
 import 'firebase_options.dart';
@@ -34,6 +35,7 @@ class MonaCoffeeApp extends StatelessWidget {
     authBloc.add(AuthStarted());
     final signOutBloc = SignOutBloc(authenticationRepository, authBloc);
     final profileBloc = ProfileBloc(authenticationRepository);
+    final resetPasswordBloc = ResetPasswordBloc(authenticationRepository);
 
     final RouterBlocListenable routerBlocListenable =
         RouterBlocListenable(authBloc);
@@ -49,6 +51,7 @@ class MonaCoffeeApp extends StatelessWidget {
           BlocProvider(create: (context) => signInBloc),
           BlocProvider(create: (context) => signOutBloc),
           BlocProvider(create: (context) => profileBloc),
+          BlocProvider(create: (context) => resetPasswordBloc),
         ],
         child: MaterialApp.router(
           title: 'Mona Coffee App',

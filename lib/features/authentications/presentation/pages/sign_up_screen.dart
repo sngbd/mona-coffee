@@ -8,6 +8,7 @@ import 'package:mona_coffee/core/widgets/activity_indicator.dart';
 import 'package:mona_coffee/core/widgets/custom_input_field.dart';
 import 'package:mona_coffee/core/widgets/error_text.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_up_bloc.dart';
 
 class SignUpScreen extends StatelessWidget {
@@ -32,6 +33,7 @@ class SignUpScreen extends StatelessWidget {
           }
 
           if (state.status == FormStatusSignUp.success) {
+            context.read<SignUpBloc>().add(ResetFormSignUp());
             context.goNamed('sign-up-login-form');
           }
         },
@@ -78,140 +80,143 @@ class SignUpScreen extends StatelessWidget {
               body: SafeArea(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 60),
-                      Text(
-                        'Join us and start\nyour coffee journey.',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown[900],
-                          height: 1.2,
+                  child: Form(
+                    key: state.formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 60),
+                        Text(
+                          'Join us and start\nyour coffee journey.',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown[900],
+                            height: 1.2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 40),
-                      CustomInputField(
-                        paddingOuterTop: 15,
-                        paddingOuterBottom: 0,
-                        label: 'Email*',
-                        hint: 'Email',
-                        keyboardType: TextInputType.emailAddress,
-                        initialValue: state.email,
-                        onChange: (value) => context
-                            .read<SignUpBloc>()
-                            .add(EmailSignUpChanged(value)),
-                      ),
-                      state.emailError != null
-                          ? ErrorText(
-                              text: state.emailError!,
-                            )
-                          : const SizedBox.shrink(),
-                      const SizedBox(height: 20),
-                      CustomInputField(
-                        paddingOuterTop: 15,
-                        paddingOuterBottom: 0,
-                        label: 'Password*',
-                        hint: 'Password',
-                        initialValue: state.password,
-                        obscureText: state.passwordToggleStatus,
-                        suffixIcon: state.passwordToggleStatus
-                            ? FontAwesomeIcons.eyeSlash
-                            : FontAwesomeIcons.eye,
-                        onPressedSuffix: () => {
-                          context.read<SignUpBloc>().add(
-                              PasswordSignUpToggleChanged(
-                                  !state.passwordToggleStatus)),
-                        },
-                        onChange: (value) => {
-                          context.read<SignUpBloc>().add(
-                                PasswordSignUpChanged(value),
-                              ),
-                        },
-                      ),
-                      state.passwordError != null
-                          ? ErrorText(
-                              text: state.passwordError!,
-                            )
-                          : const SizedBox.shrink(),
-                      const SizedBox(height: 20),
-                      CustomInputField(
-                        paddingOuterTop: 15,
-                        paddingOuterBottom: 0,
-                        label: 'Password Confirmation*',
-                        hint: 'Confirm Password',
-                        initialValue: state.confirmPassword,
-                        obscureText: state.confirmPasswordToggleStatus,
-                        suffixIcon: state.confirmPasswordToggleStatus
-                            ? FontAwesomeIcons.eyeSlash
-                            : FontAwesomeIcons.eye,
-                        onPressedSuffix: () => {
-                          context.read<SignUpBloc>().add(
-                              ConfirmPasswordSignUpToggleChanged(
-                                  !state.confirmPasswordToggleStatus)),
-                        },
-                        onChange: (value) => {
-                          context.read<SignUpBloc>().add(
-                                ConfirmPasswordSignUpChanged(value),
-                              ),
-                        },
-                      ),
-                      state.confirmPasswordError != null
-                          ? ErrorText(
-                              text: state.confirmPasswordError!,
-                            )
-                          : const SizedBox.shrink(),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            context
-                                .read<SignUpBloc>()
-                                .add(FormSignUpSubmitted());
+                        const SizedBox(height: 40),
+                        CustomInputField(
+                          paddingOuterTop: 15,
+                          paddingOuterBottom: 0,
+                          label: 'Email*',
+                          hint: 'Email',
+                          keyboardType: TextInputType.emailAddress,
+                          initialValue: state.email,
+                          onChange: (value) => context
+                              .read<SignUpBloc>()
+                              .add(EmailSignUpChanged(value)),
+                        ),
+                        state.emailError != null
+                            ? ErrorText(
+                                text: state.emailError!,
+                              )
+                            : const SizedBox.shrink(),
+                        const SizedBox(height: 20),
+                        CustomInputField(
+                          paddingOuterTop: 15,
+                          paddingOuterBottom: 0,
+                          label: 'Password*',
+                          hint: 'Password',
+                          initialValue: state.password,
+                          obscureText: state.passwordToggleStatus,
+                          suffixIcon: state.passwordToggleStatus
+                              ? FontAwesomeIcons.eyeSlash
+                              : FontAwesomeIcons.eye,
+                          onPressedSuffix: () => {
+                            context.read<SignUpBloc>().add(
+                                PasswordSignUpToggleChanged(
+                                    !state.passwordToggleStatus)),
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mBrown,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          onChange: (value) => {
+                            context.read<SignUpBloc>().add(
+                                  PasswordSignUpChanged(value),
+                                ),
+                          },
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Already have an account?',
-                            style: TextStyle(color: Colors.brown[900]),
-                          ),
-                          TextButton(
+                        state.passwordError != null
+                            ? ErrorText(
+                                text: state.passwordError!,
+                              )
+                            : const SizedBox.shrink(),
+                        const SizedBox(height: 20),
+                        CustomInputField(
+                          paddingOuterTop: 15,
+                          paddingOuterBottom: 0,
+                          label: 'Password Confirmation*',
+                          hint: 'Confirm Password',
+                          initialValue: state.confirmPassword,
+                          obscureText: state.confirmPasswordToggleStatus,
+                          suffixIcon: state.confirmPasswordToggleStatus
+                              ? FontAwesomeIcons.eyeSlash
+                              : FontAwesomeIcons.eye,
+                          onPressedSuffix: () => {
+                            context.read<SignUpBloc>().add(
+                                ConfirmPasswordSignUpToggleChanged(
+                                    !state.confirmPasswordToggleStatus)),
+                          },
+                          onChange: (value) => {
+                            context.read<SignUpBloc>().add(
+                                  ConfirmPasswordSignUpChanged(value),
+                                ),
+                          },
+                        ),
+                        state.confirmPasswordError != null
+                            ? ErrorText(
+                                text: state.confirmPasswordError!,
+                              )
+                            : const SizedBox.shrink(),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
                             onPressed: () {
-                              context.goNamed('sign-up-login-form');
+                              context
+                                  .read<SignUpBloc>()
+                                  .add(FormSignUpSubmitted());
                             },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: mBrown,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
                             child: const Text(
-                              'Log in',
+                              'Sign Up',
                               style: TextStyle(
-                                color: Colors.brown,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Already have an account?',
+                              style: TextStyle(color: Colors.brown[900]),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                context.goNamed('sign-up-login-form');
+                              },
+                              child: const Text(
+                                'Log in',
+                                style: TextStyle(
+                                  color: Colors.brown,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
