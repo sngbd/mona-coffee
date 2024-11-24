@@ -92,7 +92,7 @@ class ForgotPasswordScreen extends StatelessWidget {
       height: 48,
       child: ElevatedButton(
         onPressed: () {
-          context.goNamed('new_password');
+          context.goNamed('new-password');
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: mBrown,

@@ -173,7 +173,7 @@ class LoginFormScreen extends StatelessWidget {
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            context.goNamed('forgot_password');
+                            context.goNamed('forgot-password');
                           },
                           child: Text(
                             'Forgot password?',

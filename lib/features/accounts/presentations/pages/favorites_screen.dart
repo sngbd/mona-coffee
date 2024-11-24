@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_bloc.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_event.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_state.dart';
+import 'package:mona_coffee/models/favorite_coffee.dart';
 
 class FavoritesScreen extends StatelessWidget {
-  final List<Map<String, String>> favorites = List.generate(
-    6,
-    (index) => {
-      'name': 'Mocha Latte',
-      'type': 'Ice/Hot',
-      'image': 'assets/images/coffee.png',
-    },
-  );
-
-  FavoritesScreen({super.key});
+  const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +25,40 @@ class FavoritesScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: favorites.length,
-        itemBuilder: (context, index) => _buildFavoriteItem(favorites[index]),
+      body: BlocBuilder<FavoriteBloc, FavoriteState>(
+        builder: (context, state) {
+          if (state is FavoriteLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is FavoriteError) {
+            return Center(child: Text('Error: ${state.message}'));
+          }
+
+          if (state is FavoritesLoaded) {
+            final favorites = state.favorites;
+
+            if (favorites.isEmpty) {
+              return const Center(child: Text('No favorites yet'));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: favorites.length,
+              itemBuilder: (context, index) => _buildFavoriteItem(
+                context,
+                favorites[index],
+              ),
+            );
+          }
+
+          return const SizedBox();
+        },
       ),
     );
   }
 
-  Widget _buildFavoriteItem(Map<String, String> coffee) {
+  Widget _buildFavoriteItem(BuildContext context, FavoriteCoffee coffee) {
     return Card(
       color: Colors.white,
       elevation: 4,
@@ -51,7 +72,7 @@ class FavoritesScreen extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(5),
               child: Image.asset(
-                coffee['image']!,
+                coffee.image,
                 width: 100,
                 height: 100,
                 fit: BoxFit.cover,
@@ -63,14 +84,14 @@ class FavoritesScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    coffee['name']!,
+                    coffee.name,
                     style: const TextStyle(
                       color: mBrown,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    coffee['type']!,
+                    coffee.type,
                     style: const TextStyle(color: mBrown),
                   ),
                   const SizedBox(height: 8),
@@ -96,7 +117,9 @@ class FavoritesScreen extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.brown),
-              onPressed: () {},
+              onPressed: () => context.read<FavoriteBloc>().add(
+                    RemoveFromFavorites(coffee.id),
+                  ),
             ),
             const SizedBox(width: 8),
           ],

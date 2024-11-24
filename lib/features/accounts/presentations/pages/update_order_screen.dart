@@ -1,8 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_bloc.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_event.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_state.dart';
+import 'package:mona_coffee/features/repositories/favorite_repository.dart';
 
-class UpdateOrderScreen extends StatelessWidget {
+class UpdateOrderScreen extends StatefulWidget {
   const UpdateOrderScreen({super.key});
+
+  @override
+  State<UpdateOrderScreen> createState() => _UpdateOrderScreenState();
+}
+
+class _UpdateOrderScreenState extends State<UpdateOrderScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<FavoriteBloc>().add(
+          const CheckFavoriteStatus(
+            name: 'Mocha Latte',
+            type: 'Ice/Hot',
+          ),
+        );
+  }
+  
+  Future<void> _toggleFavorite(bool isFavorite) async {
+    final bloc = context.read<FavoriteBloc>();
+
+    if (isFavorite) {
+      final repository = context.read<FavoriteRepository>();
+      final docId = await repository.getFavoriteId('Mocha Latte', 'Ice/Hot');
+      if (docId != null) {
+        bloc.add(RemoveFromFavorites(docId));
+      }
+    } else {
+      bloc.add(
+        const AddToFavorites(
+          name: 'Mocha Latte',
+          type: 'Ice/Hot',
+          image: 'assets/images/coffee.png',
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +62,7 @@ class UpdateOrderScreen extends StatelessWidget {
               color: mDarkBrown,
               size: 24,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.goNamed('home'),
           ),
         ),
         title: const Text(
@@ -31,13 +73,21 @@ class UpdateOrderScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 22.0),
-            child: Icon(
-              Icons.favorite_border,
-              color: mDarkBrown,
-              size: 24,
+            padding: const EdgeInsets.only(right: 22.0),
+            child: BlocBuilder<FavoriteBloc, FavoriteState>(
+              builder: (context, state) {
+                final isFavorite = state is FavoriteStatus && state.isFavorite;
+                return IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: mDarkBrown,
+                    size: 24,
+                  ),
+                  onPressed: () => _toggleFavorite(isFavorite),
+                );
+              },
             ),
           ),
         ],

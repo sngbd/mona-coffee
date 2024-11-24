@@ -43,7 +43,7 @@ class AppRouter {
 
       if (authState is AuthAuthenticated) {
         context.read<ProfileBloc>().add(InitializeProfileState());
-        return '/checkout';
+        return '/home';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }
@@ -109,7 +109,7 @@ final List<GoRoute> configRouter = [
     path: '/favorites',
     name: 'favorites',
     builder: (BuildContext context, GoRouterState state) {
-      return FavoritesScreen();
+      return const FavoritesScreen();
     },
   ),
   GoRoute(
@@ -134,36 +134,36 @@ final List<GoRoute> configRouter = [
     },
   ),
   GoRoute(
-    path: '/forgot_password',
-    name: 'forgot_password',
+    path: '/forgot-password',
+    name: 'forgot-password',
     builder: (BuildContext context, GoRouterState state) {
       return const ForgotPasswordScreen();
     },
   ),
   GoRoute(
-    path: '/new_password',
-    name: 'new_password',
+    path: '/new-password',
+    name: 'new-password',
     builder: (BuildContext context, GoRouterState state) {
       return const NewPasswordScreen();
     },
   ),
   GoRoute(
-    path: '/update_order',
-    name: 'update_order',
+    path: '/update-order',
+    name: 'update-order',
     builder: (BuildContext context, GoRouterState state) {
       return const UpdateOrderScreen();
     },
   ),
   GoRoute(
-    path: '/delivery_payment_success',
-    name: 'delivery_payment_success',
+    path: '/delivery-payment-success',
+    name: 'delivery-payment-success',
     builder: (BuildContext context, GoRouterState state) {
       return const DeliveryPaymentSuccessScreen();
     },
   ),
   GoRoute(
-    path: '/dinein_seat_receive',
-    name: 'dinein_seat_receive',
+    path: '/dinein-seat-receive',
+    name: 'dinein-seat-receive',
     builder: (BuildContext context, GoRouterState state) {
       return const DineInSeatReceiveScreen(
         seatNumber: '3A',
@@ -171,8 +171,8 @@ final List<GoRoute> configRouter = [
     },
   ),
   GoRoute(
-    path: '/order_status',
-    name: 'order_status',
+    path: '/order-status',
+    name: 'order-status',
     builder: (BuildContext context, GoRouterState state) {
       return const OrderStatusDetailScreen();
     },
