@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,6 +12,9 @@ import 'package:mona_coffee/features/authentications/presentation/blocs/profile_
 import 'package:mona_coffee/features/authentications/presentation/blocs/reset_password_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_bloc.dart';
+import 'package:mona_coffee/features/blocs/favorite/favorite_event.dart';
+import 'package:mona_coffee/features/repositories/favorite_repository.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -37,6 +41,13 @@ class MonaCoffeeApp extends StatelessWidget {
     final profileBloc = ProfileBloc(authenticationRepository);
     final resetPasswordBloc = ResetPasswordBloc(authenticationRepository);
 
+    final favoriteRepository = FavoriteRepository(
+      firestore: FirebaseFirestore.instance,
+      auth: FirebaseAuth.instance,
+    );
+    final favoriteBloc = FavoriteBloc(repository: favoriteRepository);
+    favoriteBloc.add(LoadFavorites());
+
     final RouterBlocListenable routerBlocListenable =
         RouterBlocListenable(authBloc);
     final appRouter = AppRouter(routerBlocListenable: routerBlocListenable);
@@ -44,6 +55,7 @@ class MonaCoffeeApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider(create: (context) => authenticationRepository),
+        RepositoryProvider(create: (context) => favoriteRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -52,6 +64,7 @@ class MonaCoffeeApp extends StatelessWidget {
           BlocProvider(create: (context) => signOutBloc),
           BlocProvider(create: (context) => profileBloc),
           BlocProvider(create: (context) => resetPasswordBloc),
+          BlocProvider(create: (context) => favoriteBloc),
         ],
         child: MaterialApp.router(
           title: 'Mona Coffee App',

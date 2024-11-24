@@ -4,7 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/router_bloc_listenable.dart';
 import 'package:mona_coffee/core/utils/transition.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/checkout_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payment_success_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/dinein_seat_receive_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/order_status_detail_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
@@ -112,7 +117,7 @@ final List<GoRoute> configRouter = [
     path: '/favorites',
     name: 'favorites',
     builder: (BuildContext context, GoRouterState state) {
-      return FavoritesScreen();
+      return const FavoritesScreen();
     },
   ),
   GoRoute(
@@ -123,6 +128,13 @@ final List<GoRoute> configRouter = [
     },
   ),
   GoRoute(
+    path: '/checkout',
+    name: 'checkout',
+    builder: (BuildContext context, GoRouterState state) {
+      return const CheckoutScreen();
+    },
+  ),
+  GoRoute(
     path: '/profile',
     name: 'profile',
     builder: (BuildContext context, GoRouterState state) {
@@ -130,10 +142,40 @@ final List<GoRoute> configRouter = [
     },
   ),
   GoRoute(
-    path: '/new_password',
-    name: 'new_password',
+    path: '/new-password',
+    name: 'new-password',
     builder: (BuildContext context, GoRouterState state) {
       return const NewPasswordScreen();
+    },
+  ),
+  GoRoute(
+    path: '/update-order',
+    name: 'update-order',
+    builder: (BuildContext context, GoRouterState state) {
+      return const UpdateOrderScreen();
+    },
+  ),
+  GoRoute(
+    path: '/delivery-payment-success',
+    name: 'delivery-payment-success',
+    builder: (BuildContext context, GoRouterState state) {
+      return const DeliveryPaymentSuccessScreen();
+    },
+  ),
+  GoRoute(
+    path: '/dinein-seat-receive',
+    name: 'dinein-seat-receive',
+    builder: (BuildContext context, GoRouterState state) {
+      return const DineInSeatReceiveScreen(
+        seatNumber: '3A',
+      );
+    },
+  ),
+  GoRoute(
+    path: '/order-status',
+    name: 'order-status',
+    builder: (BuildContext context, GoRouterState state) {
+      return const OrderStatusDetailScreen();
     },
   ),
 ];

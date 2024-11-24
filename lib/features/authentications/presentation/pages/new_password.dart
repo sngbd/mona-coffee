@@ -30,7 +30,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
             size: 20,
           ),
           onPressed: () {
-            context.goNamed('forgot_password');
+            context.goNamed('forgot-password');
           },
         ),
       ),
