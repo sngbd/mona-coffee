@@ -25,7 +25,16 @@ class FavoritesScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: BlocBuilder<FavoriteBloc, FavoriteState>(
+      body: BlocConsumer<FavoriteBloc, FavoriteState>(
+        listener: (context, state) {
+          if (state is FavoriteError &&
+              state.message.contains('User not logged in')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Please log in to access favorites.')),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is FavoriteLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -52,7 +61,7 @@ class FavoritesScreen extends StatelessWidget {
             );
           }
 
-          return const SizedBox();
+          return const Center(child: Text('Loading favorites...'));
         },
       ),
     );

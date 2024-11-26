@@ -12,20 +12,38 @@ class FavoriteRepository {
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _auth = auth ?? FirebaseAuth.instance;
 
-  CollectionReference<Map<String, dynamic>> _getFavoritesRef() {
+  Future<DocumentReference<Map<String, dynamic>>> _getUserRef() async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not logged in');
-    return _firestore.collection('users').doc(userId).collection('favorites');
+    
+    // Get reference to user document
+    final userRef = _firestore.collection('users').doc(userId);
+    
+    // Check if user document exists, if not create it
+    final userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      await userRef.set({
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    
+    return userRef;
+  }
+
+  Future<CollectionReference<Map<String, dynamic>>> _getFavoritesRef() async {
+    final userRef = await _getUserRef();
+    return userRef.collection('favorites');
   }
 
   Future<void> addToFavorites(String name, String type, String image) async {
-    final favoritesRef = _getFavoritesRef();
-
+    final favoritesRef = await _getFavoritesRef();
+    
     final querySnapshot = await favoritesRef
         .where('name', isEqualTo: name)
         .where('type', isEqualTo: type)
         .get();
-
+        
     if (querySnapshot.docs.isEmpty) {
       await favoritesRef.add({
         'name': name,
@@ -37,20 +55,38 @@ class FavoriteRepository {
   }
 
   Future<void> removeFromFavorites(String documentId) async {
-    await _getFavoritesRef().doc(documentId).delete();
+    final favoritesRef = await _getFavoritesRef();
+    await favoritesRef.doc(documentId).delete();
   }
 
   Future<bool> isFavorite(String name, String type) async {
-    final querySnapshot = await _getFavoritesRef()
+    final favoritesRef = await _getFavoritesRef();
+    
+    final querySnapshot = await favoritesRef
         .where('name', isEqualTo: name)
         .where('type', isEqualTo: type)
         .get();
-
+        
     return querySnapshot.docs.isNotEmpty;
   }
 
-  Stream<List<FavoriteCoffee>> getFavorites() {
-    return _getFavoritesRef()
+  Stream<List<FavoriteCoffee>> getFavorites() async* {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not logged in');
+    
+    // Ensure user document exists
+    final userRef = _firestore.collection('users').doc(userId);
+    final userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      await userRef.set({
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Get favorites stream
+    yield* userRef
+        .collection('favorites')
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -59,11 +95,13 @@ class FavoriteRepository {
   }
 
   Future<String?> getFavoriteId(String name, String type) async {
-    final querySnapshot = await _getFavoritesRef()
+    final favoritesRef = await _getFavoritesRef();
+    
+    final querySnapshot = await favoritesRef
         .where('name', isEqualTo: name)
         .where('type', isEqualTo: type)
         .get();
-
+        
     return querySnapshot.docs.isNotEmpty ? querySnapshot.docs.first.id : null;
   }
 }

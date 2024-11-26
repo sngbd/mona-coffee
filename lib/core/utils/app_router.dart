@@ -8,8 +8,14 @@ import 'package:mona_coffee/features/accounts/presentations/pages/checkout_scree
 import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payment_success_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/dinein_seat_receive_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/order_status_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_edit_menu.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_home_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_item_detail.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_orders_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_profile_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
@@ -135,6 +141,13 @@ final List<GoRoute> configRouter = [
     },
   ),
   GoRoute(
+    path: '/item-detail',
+    name: 'item-detail',
+    builder: (BuildContext context, GoRouterState state) {
+      return const ItemDetailScreen();
+    },
+  ),
+  GoRoute(
     path: '/profile',
     name: 'profile',
     builder: (BuildContext context, GoRouterState state) {
@@ -176,6 +189,41 @@ final List<GoRoute> configRouter = [
     name: 'order-status',
     builder: (BuildContext context, GoRouterState state) {
       return const OrderStatusDetailScreen();
+    },
+  ),
+  GoRoute(
+    path: '/admin-item-detail',
+    name: 'admin-item-detail',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminItemDetail();
+    },
+  ),
+  GoRoute(
+    path: '/admin-edit-menu',
+    name: 'admin-edit-menu',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminEditMenu();
+    },
+  ),
+  GoRoute(
+    path: '/admin-home',
+    name: 'admin-home',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminHomeContent();
+    },
+  ),
+  GoRoute(
+    path: '/admin-orders',
+    name: 'admin-orders',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminOrdersScreen();
+    },
+  ),
+  GoRoute(
+    path: '/admin-profile',
+    name: 'admin-profile',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminProfileScreen();
     },
   ),
 ];

@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_orders_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_profile_screen.dart';
 import 'package:mona_coffee/models/categories_model.dart';
 import 'package:mona_coffee/models/menu_items_model.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class AdminHomeScreen extends StatefulWidget {
+  const AdminHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeContent(),
-    const FavoritesScreen(),
-    const CartScreen(),
-    const ProfileScreen(),
+    const AdminHomeContent(),
+    const AdminOrdersScreen(),
+    const AdminProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -80,12 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Menu',
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite),
-            label: 'Favorite',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+            icon: Icon(Icons.task),
+            label: 'Orders',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_circle),
@@ -97,14 +91,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+class AdminHomeContent extends StatefulWidget {
+  const AdminHomeContent({super.key});
 
   @override
-  State<HomeContent> createState() => _HomeContentState();
+  State<AdminHomeContent> createState() => _AdminHomeContentState();
 }
 
-class _HomeContentState extends State<HomeContent> {
+class _AdminHomeContentState extends State<AdminHomeContent> {
   int _selectedCategoryIndex = 0;
 
   void _onCategoryTapped(int index) {
@@ -122,10 +116,14 @@ class _HomeContentState extends State<HomeContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 50),
-            const Text(
-              'Good Morning, Lorenzo',
-              style: TextStyle(
-                  color: mDarkBrown, fontSize: 20, fontWeight: FontWeight.w600),
+            const Center(
+              child: Text(
+                'Menu List',
+                style: TextStyle(
+                    color: mDarkBrown,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600),
+              ),
             ),
             const SizedBox(height: 36),
             _buildSearchBar(),
@@ -279,9 +277,9 @@ class _HomeContentState extends State<HomeContent> {
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: const Icon(
-                    Icons.add,
+                    Icons.chevron_right,
                     color: Colors.white,
-                    size: 16,
+                    size: 24,
                   ),
                 ),
               ),
