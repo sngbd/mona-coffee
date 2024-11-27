@@ -23,7 +23,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   void initState() {
     super.initState();
     _checkFavoriteStatus();
-    // Initialize price based on medium size
     currentPrice = widget.item.mediumPrice.toDouble();
   }
 
