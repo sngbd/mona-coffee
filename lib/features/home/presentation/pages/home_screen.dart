@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
+import 'package:mona_coffee/features/blocs/menu/menu_bloc.dart';
+import 'package:mona_coffee/features/blocs/menu/menu_event.dart';
+import 'package:mona_coffee/features/blocs/menu/menu_state.dart';
+import 'package:mona_coffee/features/repositories/menu_repository.dart';
 import 'package:mona_coffee/models/categories_model.dart';
-import 'package:mona_coffee/models/menu_items_model.dart';
+import 'package:mona_coffee/models/menu_item_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,45 +110,66 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
+  late final MenuBloc _menuBloc;
   int _selectedCategoryIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _menuBloc = MenuBloc(MenuRepository());
+    // Load initial category (Popular)
+    _menuBloc.add(const LoadMenuByCategory('Popular'));
+  }
+
+  @override
+  void dispose() {
+    _menuBloc.close();
+    super.dispose();
+  }
 
   void _onCategoryTapped(int index) {
     setState(() {
       _selectedCategoryIndex = index;
     });
+    _menuBloc.add(LoadMenuByCategory(categories[index]));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 50),
-            const Text(
-              'Good Morning, Lorenzo',
-              style: TextStyle(
-                  color: mDarkBrown, fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 36),
-            _buildSearchBar(),
-            const SizedBox(height: 50),
-            const Text(
-              'Categories',
-              style: TextStyle(
-                color: mBrown,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+    return BlocProvider(
+      create: (context) => _menuBloc,
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 50),
+              const Text(
+                'Good Morning, Lorenzo',
+                style: TextStyle(
+                    color: mDarkBrown,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildCategoryList(),
-            const SizedBox(height: 20),
-            _buildMenuGrid(),
-            const SizedBox(height: 10),
-          ],
+              const SizedBox(height: 36),
+              _buildSearchBar(),
+              const SizedBox(height: 50),
+              const Text(
+                'Categories',
+                style: TextStyle(
+                  color: mBrown,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildCategoryList(),
+              const SizedBox(height: 20),
+              _buildMenuGrid(),
+              const SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );
@@ -208,9 +235,16 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
-  Widget _buildMenuItem(Map<String, String> menuItem) {
+  Widget _buildMenuItem(MenuItem menuItem) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ItemDetailScreen(item: menuItem),
+          ),
+        );
+      },
       child: Card(
         color: Colors.white,
         shape: RoundedRectangleBorder(
@@ -227,17 +261,20 @@ class _HomeContentState extends State<HomeContent> {
                   borderRadius: BorderRadius.circular(5),
                   child: SizedBox(
                     height: 80,
-                    child: Image.asset(
-                      menuItem['image']!,
+                    child: Image.network(
+                      menuItem.hotImage,
                       fit: BoxFit.cover,
                       width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(child: Icon(Icons.error));
+                      },
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
               Text(
-                menuItem['name']!,
+                toTitleCase(menuItem.name),
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 16,
@@ -246,7 +283,9 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 5),
               Text(
-                menuItem['type']!,
+                menuItem.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 12,
@@ -254,7 +293,7 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 5),
               Text(
-                menuItem['price']!,
+                'From Rp ${menuItem.smallPrice.toString()}',
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 12,
@@ -284,19 +323,42 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+  String toTitleCase(String text) {
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Widget _buildMenuGrid() {
     return Expanded(
-      child: GridView.builder(
-        itemCount: menuItems.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.8,
-        ),
-        itemBuilder: (context, index) {
-          final menuItem = menuItems[index];
-          return _buildMenuItem(menuItem);
+      child: BlocBuilder<MenuBloc, MenuState>(
+        builder: (context, state) {
+          if (state is MenuLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is MenuError) {
+            return Center(child: Text(state.message));
+          }
+
+          if (state is MenuLoaded) {
+            return GridView.builder(
+              itemCount: state.items.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.8,
+              ),
+              itemBuilder: (context, index) {
+                final menuItem = state.items[index];
+                return _buildMenuItem(menuItem);
+              },
+            );
+          }
+
+          return const SizedBox();
         },
       ),
     );
