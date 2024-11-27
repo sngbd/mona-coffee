@@ -11,10 +11,13 @@ import 'package:mona_coffee/features/accounts/presentations/pages/favorites_scre
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/order_status_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_delivery_order_detail_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_dinein_order_detail_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_edit_menu.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_home_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_item_detail.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_orders_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_past_orders_detail_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_profile_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
@@ -140,13 +143,13 @@ final List<GoRoute> configRouter = [
       return const CheckoutScreen();
     },
   ),
-  GoRoute(
-    path: '/item-detail',
-    name: 'item-detail',
-    builder: (BuildContext context, GoRouterState state) {
-      return const ItemDetailScreen();
-    },
-  ),
+  // GoRoute(
+  //   path: '/item-detail',
+  //   name: 'item-detail',
+  //   builder: (BuildContext context, GoRouterState state) {
+  //     return const ItemDetailScreen();
+  //   },
+  // ),
   GoRoute(
     path: '/profile',
     name: 'profile',
@@ -205,13 +208,13 @@ final List<GoRoute> configRouter = [
       return const AdminEditMenu();
     },
   ),
-  GoRoute(
-    path: '/admin-home',
-    name: 'admin-home',
-    builder: (BuildContext context, GoRouterState state) {
-      return const AdminHomeContent();
-    },
-  ),
+  // GoRoute(
+  //   path: '/admin-home',
+  //   name: 'admin-home',
+  //   builder: (BuildContext context, GoRouterState state) {
+  //     return const AdminHomeContent();
+  //   },
+  // ),
   GoRoute(
     path: '/admin-orders',
     name: 'admin-orders',
@@ -224,6 +227,27 @@ final List<GoRoute> configRouter = [
     name: 'admin-profile',
     builder: (BuildContext context, GoRouterState state) {
       return const AdminProfileScreen();
+    },
+  ),
+  GoRoute(
+    path: '/admin-delivery-detail-screen',
+    name: 'admin-delivery-detail-screen',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminDeliveryOrderDetailScreen();
+    },
+  ),
+  GoRoute(
+    path: '/admin-dinein-detail-screen',
+    name: 'admin-dinein-detail-screen',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminDineInOrderDetailScreen();
+    },
+  ),
+  GoRoute(
+    path: '/admin-past-order-detail-screen',
+    name: 'admin-past-order-detail-screen',
+    builder: (BuildContext context, GoRouterState state) {
+      return const AdminPastOrderDetailScreen();
     },
   ),
 ];

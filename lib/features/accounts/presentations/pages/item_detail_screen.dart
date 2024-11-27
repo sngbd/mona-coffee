@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/features/repositories/favorite_repository.dart';
+import 'package:mona_coffee/models/menu_item_model.dart';
 
 class ItemDetailScreen extends StatefulWidget {
-  const ItemDetailScreen({super.key});
+  final MenuItem item;
+  const ItemDetailScreen({super.key, required this.item});
 
   @override
   State<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -15,20 +17,23 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   bool isFavorite = false;
   String? favoriteId;
   final FavoriteRepository _favoriteRepository = FavoriteRepository();
+  late double currentPrice;
 
   @override
   void initState() {
     super.initState();
     _checkFavoriteStatus();
+    // Initialize price based on medium size
+    currentPrice = widget.item.mediumPrice.toDouble();
   }
 
   Future<void> _checkFavoriteStatus() async {
     try {
-      final status =
-          await _favoriteRepository.isFavorite('Mocha Latte', 'Ice/Hot');
+      final status = await _favoriteRepository.isFavorite(
+          widget.item.name, widget.item.type);
       if (status) {
-        favoriteId =
-            await _favoriteRepository.getFavoriteId('Mocha Latte', 'Ice/Hot');
+        favoriteId = await _favoriteRepository.getFavoriteId(
+            widget.item.name, widget.item.type);
       }
       setState(() {
         isFavorite = status;
@@ -51,7 +56,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Future<void> _toggleFavorite() async {
     try {
       if (isFavorite) {
-        // Remove from favorites
         if (favoriteId != null) {
           await _favoriteRepository.removeFromFavorites(favoriteId!);
           setState(() {
@@ -61,18 +65,16 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           _showSnackBar('Removed from favorites');
         }
       } else {
-        // Add to favorites
         await _favoriteRepository.addToFavorites(
-          'Mocha Latte',
-          'Ice/Hot',
-          'assets/images/coffee.png',
+          widget.item.name,
+          widget.item.type,
+          widget.item.hotImage,
         );
         setState(() {
           isFavorite = true;
         });
-        // Get the new favorite ID
         favoriteId = await _favoriteRepository.getFavoriteId(
-            'Mocha Latte', 'Ice/Hot'); // Ubah 'Ice' menjadi 'Ice/Hot'
+            widget.item.name, widget.item.type);
         _showSnackBar('Added to favorites');
       }
     } catch (e) {
@@ -83,10 +85,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   void _onSizeSelected(String size) {
     setState(() {
       selectedSize = size;
+      // Update price based on selected size
+      switch (size) {
+        case 'S':
+          currentPrice = widget.item.smallPrice.toDouble();
+          break;
+        case 'M':
+          currentPrice = widget.item.mediumPrice.toDouble();
+          break;
+        case 'L':
+          currentPrice = widget.item.largePrice.toDouble();
+          break;
+      }
     });
   }
 
-  // Tambahkan fungsi untuk mengubah quantity
   void _incrementQuantity() {
     setState(() {
       quantity++;
@@ -117,9 +130,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               color: mDarkBrown,
               size: 24,
             ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
           ),
         ),
         title: const Text(
@@ -145,7 +156,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         ],
       ),
       body: SafeArea(
-        // Tambahkan SafeArea
         child: Stack(
           children: [
             SingleChildScrollView(
@@ -156,25 +166,30 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 60),
-                    // Image
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/coffee.png',
+                      child: Image.network(
+                        widget.item.hotImage,
                         width: double.infinity,
                         height: 250,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: double.infinity,
+                            height: 250,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.error),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Title and Rating
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Mocha Latte',
-                          style: TextStyle(
+                        Text(
+                          toTitleCase(widget.item.name),
+                          style: const TextStyle(
                             color: mDarkBrown,
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
@@ -213,40 +228,34 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-
-                    // Ice/Hot option
-                    const Text(
-                      'Ice/Hot',
-                      style: TextStyle(
+                    Text(
+                      widget.item.type,
+                      style: const TextStyle(
                         color: mDarkBrown,
                         fontSize: 16,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-                    // Rating
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.star, color: Colors.orange, size: 24),
-                        SizedBox(width: 4),
+                        const Icon(Icons.star, color: Colors.orange, size: 24),
+                        const SizedBox(width: 4),
                         Text(
-                          '4.8',
-                          style: TextStyle(
+                          widget.item.rating.toString(),
+                          style: const TextStyle(
                             color: mDarkBrown,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          ' (250)',
-                          style: TextStyle(
+                          ' (${widget.item.totalRatings})',
+                          style: const TextStyle(
                             color: mDarkBrown,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // Description
                     const Text(
                       'Description',
                       style: TextStyle(
@@ -256,16 +265,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Our Mocha Latte blends rich espresso with velvety steamed milk, premium cocoa, and a hint of vanilla, topped with a smooth layer of foam for a perfectly balanced, indulgent treat.',
-                      style: TextStyle(
+                    Text(
+                      widget.item.description,
+                      style: const TextStyle(
                         color: mDarkBrown,
                         height: 1.5,
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Size Selection
                     const Text(
                       'Size',
                       style: TextStyle(
@@ -302,11 +309,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
+                        const Text(
                           'Price',
                           style: TextStyle(
                             color: mDarkBrown,
@@ -315,8 +322,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           ),
                         ),
                         Text(
-                          'Rp 50k',
-                          style: TextStyle(
+                          'Rp ${(currentPrice * quantity).toStringAsFixed(0)}',
+                          style: const TextStyle(
                             color: mBrown,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -325,7 +332,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ],
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Implement add to cart functionality
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B4513),
                         padding: const EdgeInsets.symmetric(
@@ -355,10 +364,16 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
+  String toTitleCase(String text) {
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Widget _buildSizeButton(String size, bool isSelected) {
     return Expanded(
       child: GestureDetector(
-        // Tambahkan GestureDetector
         onTap: () => _onSizeSelected(size),
         child: Container(
           height: 44,

@@ -1,7 +1,8 @@
 List<String> categories = [
   'Popular',
-  'Latte',
-  'Cappuccino',
-  'Espresso',
   'Americano',
+  'Latte',
+  'Tea',
+  'Non-coffee',
+  'Mocha',
 ];
