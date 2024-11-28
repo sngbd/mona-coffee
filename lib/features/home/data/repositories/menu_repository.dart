@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mona_coffee/models/menu_item_model.dart';
+import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
 
 class MenuRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -47,6 +47,21 @@ class MenuRepository {
       }
     } catch (e) {
       throw Exception('Failed to fetch menu items: $e');
+    }
+  }
+
+  Future<MenuItem> getMenuItem(String id) async {
+    try {
+      final DocumentSnapshot doc =
+          await _firestore.collection('menu').doc(id).get();
+      if (doc.exists) {
+        return MenuItem.fromFirestore(
+            doc.id, doc.data() as Map<String, dynamic>);
+      } else {
+        throw Exception('Menu item not found');
+      }
+    } catch (e) {
+      throw Exception('Failed to load menu item: $e');
     }
   }
 }

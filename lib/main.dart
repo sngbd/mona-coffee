@@ -12,9 +12,10 @@ import 'package:mona_coffee/features/authentications/presentation/blocs/profile_
 import 'package:mona_coffee/features/authentications/presentation/blocs/reset_password_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_bloc.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_event.dart';
-import 'package:mona_coffee/features/repositories/favorite_repository.dart';
+import 'package:mona_coffee/features/home/data/repositories/favorite_repository.dart';
+import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
+import 'package:mona_coffee/features/home/presentation/blocs/favorite_bloc.dart';
+import 'package:mona_coffee/features/home/presentation/blocs/menu_bloc.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -45,7 +46,10 @@ class MonaCoffeeApp extends StatelessWidget {
       firestore: FirebaseFirestore.instance,
       auth: FirebaseAuth.instance,
     );
+
+    final menuRepository = MenuRepository();
     final favoriteBloc = FavoriteBloc(repository: favoriteRepository);
+    final menuBloc = MenuBloc(menuRepository);
     favoriteBloc.add(LoadFavorites());
 
     final RouterBlocListenable routerBlocListenable =
@@ -56,6 +60,7 @@ class MonaCoffeeApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (context) => authenticationRepository),
         RepositoryProvider(create: (context) => favoriteRepository),
+        RepositoryProvider(create: (context) => menuRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -65,6 +70,7 @@ class MonaCoffeeApp extends StatelessWidget {
           BlocProvider(create: (context) => profileBloc),
           BlocProvider(create: (context) => resetPasswordBloc),
           BlocProvider(create: (context) => favoriteBloc),
+          BlocProvider(create: (context) => menuBloc),
         ],
         child: MaterialApp.router(
           title: 'Mona Coffee App',

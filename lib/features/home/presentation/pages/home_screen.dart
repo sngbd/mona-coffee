@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
-import 'package:mona_coffee/features/blocs/menu/menu_bloc.dart';
-import 'package:mona_coffee/features/blocs/menu/menu_event.dart';
-import 'package:mona_coffee/features/blocs/menu/menu_state.dart';
-import 'package:mona_coffee/features/repositories/menu_repository.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
+import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
+import 'package:mona_coffee/features/home/presentation/blocs/menu_bloc.dart';
 import 'package:mona_coffee/models/categories_model.dart';
-import 'package:mona_coffee/models/menu_item_model.dart';
+import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,56 +47,70 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBottomNavigationBar() {
-    return NavigationBarTheme(
-      data: NavigationBarThemeData(
-        indicatorColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (states) {
-            if (states.contains(WidgetState.selected)) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 5,
+            blurRadius: 7,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          indicatorColor: Colors.transparent,
+          elevation: 2,
+          labelTextStyle: WidgetStateProperty.resolveWith(
+            (states) {
+              if (states.contains(WidgetState.selected)) {
+                return const TextStyle(
+                  color: mBrown,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                );
+              }
               return const TextStyle(
-                color: mBrown,
+                color: Colors.grey,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               );
-            }
-            return const TextStyle(
-              color: Colors.grey,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            );
-          },
+            },
+          ),
+          iconTheme: WidgetStateProperty.resolveWith(
+            (states) {
+              if (states.contains(WidgetState.selected)) {
+                return const IconThemeData(color: mBrown);
+              }
+              return const IconThemeData(color: Colors.grey);
+            },
+          ),
         ),
-        iconTheme: WidgetStateProperty.resolveWith(
-          (states) {
-            if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: mBrown);
-            }
-            return const IconThemeData(color: Colors.grey);
-          },
+        child: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: _onItemTapped,
+          backgroundColor: Colors.white,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.coffee),
+              label: 'Menu',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.favorite),
+              label: 'Favorite',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.shopping_cart),
+              label: 'Cart',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.account_circle),
+              label: 'Profile',
+            ),
+          ],
         ),
-      ),
-      child: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _onItemTapped,
-        backgroundColor: Colors.white,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.coffee),
-            label: 'Menu',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite),
-            label: 'Favorite',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_circle),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
@@ -136,6 +150,7 @@ class _HomeContentState extends State<HomeContent> {
 
   @override
   Widget build(BuildContext context) {
+    final String? name = context.read<ProfileBloc>().state.name;
     return BlocProvider(
       create: (context) => _menuBloc,
       child: Scaffold(
@@ -145,9 +160,11 @@ class _HomeContentState extends State<HomeContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 50),
-              const Text(
-                'Good Morning, Lorenzo',
-                style: TextStyle(
+              Text(
+                name == null
+                    ? Helper.getGreeting()
+                    : '${Helper.getGreeting()}, $name',
+                style: const TextStyle(
                     color: mDarkBrown,
                     fontSize: 20,
                     fontWeight: FontWeight.w600),
@@ -165,9 +182,8 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 20),
               _buildCategoryList(),
-              const SizedBox(height: 20),
-              _buildMenuGrid(),
               const SizedBox(height: 10),
+              _buildMenuGrid(),
             ],
           ),
         ),

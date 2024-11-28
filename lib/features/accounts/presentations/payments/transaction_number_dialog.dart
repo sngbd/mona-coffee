@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/core/widgets/flasher.dart';
 
 class TransactionNumberDialog extends StatelessWidget {
   final String bankName;
@@ -43,11 +44,12 @@ class TransactionNumberDialog extends StatelessWidget {
               GestureDetector(
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: accountNumber));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Account number copied to clipboard'),
-                      duration: Duration(seconds: 2),
-                    ),
+                  Flasher.showSnackBar(
+                    context,
+                    'Success',
+                    'Account number copied to clipboard',
+                    Icons.check_circle_outline,
+                    Colors.green,
                   );
                 },
                 child: Text(

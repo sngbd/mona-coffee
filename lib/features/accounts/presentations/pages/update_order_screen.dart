@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_bloc.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_event.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_state.dart';
-import 'package:mona_coffee/features/repositories/favorite_repository.dart';
+import 'package:mona_coffee/features/home/data/repositories/favorite_repository.dart';
+import 'package:mona_coffee/features/home/presentation/blocs/favorite_bloc.dart';
 
 class UpdateOrderScreen extends StatefulWidget {
   const UpdateOrderScreen({super.key});
@@ -22,16 +20,17 @@ class _UpdateOrderScreenState extends State<UpdateOrderScreen> {
           const CheckFavoriteStatus(
             name: 'Mocha Latte',
             type: 'Ice/Hot',
+            size: 'M'
           ),
         );
   }
-  
+
   Future<void> _toggleFavorite(bool isFavorite) async {
     final bloc = context.read<FavoriteBloc>();
 
     if (isFavorite) {
       final repository = context.read<FavoriteRepository>();
-      final docId = await repository.getFavoriteId('Mocha Latte', 'Ice/Hot');
+      final docId = await repository.getFavoriteId('Mocha Latte', 'Ice/Hot', 'M');
       if (docId != null) {
         bloc.add(RemoveFromFavorites(docId));
       }
@@ -40,6 +39,7 @@ class _UpdateOrderScreenState extends State<UpdateOrderScreen> {
         const AddToFavorites(
           name: 'Mocha Latte',
           type: 'Ice/Hot',
+          size: 'Small',
           image: 'assets/images/coffee.png',
         ),
       );

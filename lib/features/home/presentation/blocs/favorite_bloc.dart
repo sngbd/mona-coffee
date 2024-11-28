@@ -1,8 +1,71 @@
+import 'package:mona_coffee/features/home/data/entities/favorite_coffee.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_event.dart';
-import 'package:mona_coffee/features/blocs/favorite/favorite_state.dart';
-import 'package:mona_coffee/features/repositories/favorite_repository.dart';
+import 'package:mona_coffee/features/home/data/repositories/favorite_repository.dart';
+
+abstract class FavoriteState {
+  const FavoriteState();
+}
+
+class FavoriteInitial extends FavoriteState {}
+
+class FavoriteLoading extends FavoriteState {}
+
+class FavoritesLoaded extends FavoriteState {
+  final List<FavoriteCoffee> favorites;
+
+  const FavoritesLoaded(this.favorites);
+}
+
+class FavoriteError extends FavoriteState {
+  final String message;
+
+  const FavoriteError(this.message);
+}
+
+class FavoriteStatus extends FavoriteState {
+  final bool isFavorite;
+
+  const FavoriteStatus(this.isFavorite);
+}
+
+abstract class FavoriteEvent {
+  const FavoriteEvent();
+}
+
+class LoadFavorites extends FavoriteEvent {}
+
+class AddToFavorites extends FavoriteEvent {
+  final String name;
+  final String type;
+  final String image;
+  final String size;
+
+  const AddToFavorites({
+    required this.name,
+    required this.type,
+    required this.image,
+    required this.size,
+  });
+}
+
+class RemoveFromFavorites extends FavoriteEvent {
+  final String documentId;
+
+  const RemoveFromFavorites(this.documentId);
+}
+
+class CheckFavoriteStatus extends FavoriteEvent {
+  final String name;
+  final String type;
+  final String size;
+
+  const CheckFavoriteStatus({
+    required this.name,
+    required this.type,
+    required this.size,
+  });
+}
 
 class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
   final FavoriteRepository _repository;
@@ -27,6 +90,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
 
       // Get favorites as a single Future instead of Stream if possible
       final favorites = await _repository.getFavorites().first;
+      favorites.map((f) async => await _repository.getFavoriteId(f.name, f.type, f.size));
       if (!isClosed) {
         emit(FavoritesLoaded(favorites));
       }
@@ -42,7 +106,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     Emitter<FavoriteState> emit,
   ) async {
     try {
-      await _repository.addToFavorites(event.name, event.type, event.image);
+      await _repository.addToFavorites(event.name, event.type, event.size, event.image);
       if (!isClosed) {
         emit(const FavoriteStatus(true));
         // Load favorites directly instead of adding new event
@@ -84,7 +148,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     Emitter<FavoriteState> emit,
   ) async {
     try {
-      final isFavorite = await _repository.isFavorite(event.name, event.type);
+      final isFavorite = await _repository.isFavorite(event.name, event.type, event.size);
       if (!isClosed) {
         emit(FavoriteStatus(isFavorite));
       }

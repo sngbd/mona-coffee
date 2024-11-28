@@ -1,11 +1,16 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
-import 'package:mona_coffee/features/repositories/favorite_repository.dart';
-import 'package:mona_coffee/models/menu_item_model.dart';
+import 'package:mona_coffee/core/widgets/flasher.dart';
+import 'package:mona_coffee/features/home/data/entities/menu_option.dart';
+import 'package:mona_coffee/features/home/data/repositories/favorite_repository.dart';
+import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final MenuItem item;
-  const ItemDetailScreen({super.key, required this.item});
+  final MenuOption? option;
+  const ItemDetailScreen({super.key, required this.item, this.option});
 
   @override
   State<ItemDetailScreen> createState() => _ItemDetailScreenState();
@@ -15,75 +20,109 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   String selectedSize = 'M';
   int quantity = 1;
   bool isFavorite = false;
+  bool isFavoriteLoading = true;
   String? favoriteId;
   final FavoriteRepository _favoriteRepository = FavoriteRepository();
   late double currentPrice;
+  String _selectedOption = 'Hot';
 
   @override
   void initState() {
     super.initState();
+    selectedSize = widget.option?.size ?? 'M';
+    _selectedOption = widget.option?.type ?? 'Hot';
+    if (selectedSize == 'S') {
+      currentPrice = widget.item.smallPrice.toDouble();
+    } else if (selectedSize == 'M') {
+      currentPrice = widget.item.mediumPrice.toDouble();
+    } else {
+      currentPrice = widget.item.largePrice.toDouble();
+    }
     _checkFavoriteStatus();
-    currentPrice = widget.item.mediumPrice.toDouble();
   }
 
   Future<void> _checkFavoriteStatus() async {
     try {
       final status = await _favoriteRepository.isFavorite(
-          widget.item.name, widget.item.type);
+          widget.item.name, _selectedOption, selectedSize);
       if (status) {
         favoriteId = await _favoriteRepository.getFavoriteId(
-            widget.item.name, widget.item.type);
+            widget.item.name, _selectedOption, selectedSize);
       }
       setState(() {
         isFavorite = status;
+        isFavoriteLoading = false;
       });
     } catch (e) {
-      _showSnackBar('Error checking favorite status');
+      Flasher.showSnackBar(
+        context,
+        'Error',
+        'Error checking favorite status',
+        Icons.error_outline,
+        Colors.red,
+      );
     }
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   Future<void> _toggleFavorite() async {
+    setState(() {
+      isFavoriteLoading = true;
+    });
     try {
       if (isFavorite) {
         if (favoriteId != null) {
           await _favoriteRepository.removeFromFavorites(favoriteId!);
           setState(() {
             isFavorite = false;
+            isFavoriteLoading = false;
             favoriteId = null;
           });
-          _showSnackBar('Removed from favorites');
+          Flasher.showSnackBar(
+            context,
+            'Success',
+            'Removed from favorites',
+            Icons.check_circle_outline,
+            Colors.green,
+          );
         }
       } else {
         await _favoriteRepository.addToFavorites(
           widget.item.name,
-          widget.item.type,
-          widget.item.hotImage,
+          _selectedOption,
+          selectedSize,
+          _selectedOption == 'Hot'
+              ? widget.item.hotImage
+              : widget.item.iceImage,
         );
         setState(() {
           isFavorite = true;
+          isFavoriteLoading = false;
         });
         favoriteId = await _favoriteRepository.getFavoriteId(
-            widget.item.name, widget.item.type);
-        _showSnackBar('Added to favorites');
+            widget.item.name, _selectedOption, selectedSize);
+        Flasher.showSnackBar(
+          context,
+          'Success',
+          'Added to favorites',
+          Icons.check_circle_outline,
+          Colors.green,
+        );
       }
     } catch (e) {
-      _showSnackBar('Error updating favorite status');
+      Flasher.showSnackBar(
+        context,
+        'Error',
+        'Error updating favorite status',
+        Icons.error_outline,
+        Colors.red,
+      );
     }
   }
 
   void _onSizeSelected(String size) {
     setState(() {
       selectedSize = size;
+      isFavoriteLoading = true;
       // Update price based on selected size
       switch (size) {
         case 'S':
@@ -97,6 +136,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           break;
       }
     });
+    _checkFavoriteStatus();
   }
 
   void _incrementQuantity() {
@@ -113,12 +153,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     });
   }
 
+  void _selectOption(String option) {
+    setState(() {
+      _selectedOption = option;
+      isFavoriteLoading = true;
+    });
+    _checkFavoriteStatus();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: mLightOrange,
       appBar: AppBar(
         backgroundColor: mLightOrange,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: Padding(
@@ -141,17 +190,27 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: IconButton(
-              icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: mDarkBrown,
-                size: 24,
-              ),
-              onPressed: _toggleFavorite,
-            ),
-          ),
+          isFavoriteLoading
+              ? const Padding(
+                  padding: EdgeInsets.only(right: 25.0),
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: mDarkBrown,
+                      strokeWidth: 3,
+                    ),
+                  ))
+              : Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: mDarkBrown,
+                      size: 24,
+                    ),
+                    onPressed: _toggleFavorite,
+                  )),
         ],
       ),
       body: SafeArea(
@@ -164,11 +223,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 60),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        widget.item.hotImage,
+                        _selectedOption == 'Hot'
+                            ? widget.item.hotImage
+                            : widget.item.iceImage,
                         width: double.infinity,
                         height: 250,
                         fit: BoxFit.cover,
@@ -227,12 +287,42 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.item.type,
-                      style: const TextStyle(
-                        color: mDarkBrown,
-                        fontSize: 16,
-                      ),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _selectOption('Hot'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _selectedOption == 'Hot'
+                                ? mBrown
+                                : Colors.white,
+                          ),
+                          child: Text(
+                            'Hot',
+                            style: TextStyle(
+                              color: _selectedOption == 'Hot'
+                                  ? Colors.white
+                                  : mDarkBrown,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () => _selectOption('Ice'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _selectedOption == 'Ice'
+                                ? mBrown
+                                : Colors.white,
+                          ),
+                          child: Text(
+                            'Ice',
+                            style: TextStyle(
+                              color: _selectedOption == 'Ice'
+                                  ? Colors.white
+                                  : mDarkBrown,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Row(
