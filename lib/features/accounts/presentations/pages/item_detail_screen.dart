@@ -1,8 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
+import 'package:mona_coffee/features/accounts/data/entities/cart_item_repo.dart';
+import 'package:mona_coffee/features/accounts/data/repositories/cart_repository.dart';
+import 'package:mona_coffee/features/accounts/presentations/blocs/cart_bloc.dart';
 import 'package:mona_coffee/features/home/data/entities/menu_option.dart';
 import 'package:mona_coffee/features/home/data/repositories/favorite_repository.dart';
 import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
@@ -21,8 +26,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   int quantity = 1;
   bool isFavorite = false;
   bool isFavoriteLoading = true;
+  bool isInCart = false;
+  bool isInCartLoading = true;
   String? favoriteId;
   final FavoriteRepository _favoriteRepository = FavoriteRepository();
+  final CartRepository _cartRepository = CartRepository();
   late double currentPrice;
   String _selectedOption = 'Hot';
 
@@ -39,6 +47,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       currentPrice = widget.item.largePrice.toDouble();
     }
     _checkFavoriteStatus();
+    _checkCartStatus();
   }
 
   Future<void> _checkFavoriteStatus() async {
@@ -61,6 +70,34 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         Icons.error_outline,
         Colors.red,
       );
+    }
+  }
+
+  Future<void> _checkCartStatus() async {
+    setState(() {
+      isInCartLoading = true;
+    });
+    try {
+      final qty = await _cartRepository.getQuantityInCart(
+          widget.item.name, _selectedOption, selectedSize);
+      if (qty > 0) {
+        setState(() {
+          isInCart = true;
+        });
+        quantity = qty;
+      } else {
+        setState(() {
+          isInCart = false;
+        });
+      }
+      setState(() {
+        isInCartLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isInCart = false;
+        isInCartLoading = false;
+      });
     }
   }
 
@@ -137,6 +174,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       }
     });
     _checkFavoriteStatus();
+    _checkCartStatus();
   }
 
   void _incrementQuantity() {
@@ -159,6 +197,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       isFavoriteLoading = true;
     });
     _checkFavoriteStatus();
+    _checkCartStatus();
   }
 
   @override
@@ -420,28 +459,79 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         ),
                       ],
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Implement add to cart functionality
+                    BlocConsumer<CartBloc, CartState>(
+                      listener: (context, state) {
+                        if (state is CartError) {
+                          Flasher.showSnackBar(
+                            context,
+                            'Error',
+                            state.message,
+                            Icons.error_outline,
+                            Colors.red,
+                          );
+                        }
+
+                        if (state is CartLoaded) {
+                          Flasher.showSnackBar(
+                            context,
+                            'Success',
+                            'Item added to cart',
+                            Icons.check_circle_outline,
+                            Colors.green,
+                          );
+                        }
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B4513),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Add to Cart',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      builder: (context, state) {
+                        return ElevatedButton(
+                          onPressed: () {
+                            final compositeKey =
+                                '${widget.item.name}_${_selectedOption}_$selectedSize';
+                            final cartItem = CartItemRepo(
+                                compositeKey: compositeKey,
+                                name: widget.item.name,
+                                type: _selectedOption,
+                                size: selectedSize,
+                                price: currentPrice,
+                                quantity: quantity,
+                                imageUrl: _selectedOption == 'Hot'
+                                    ? widget.item.hotImage
+                                    : widget.item.iceImage,
+                                timestamp: FieldValue.serverTimestamp());
+                            context.read<CartBloc>().add(AddToCart(cartItem));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B4513),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: state is CartLoading || isInCartLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : (isInCart
+                                  ? const Text(
+                                      'Update to Cart',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Add to Cart',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )),
+                        );
+                      },
                     ),
                   ],
                 ),

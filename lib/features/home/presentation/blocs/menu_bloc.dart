@@ -57,6 +57,15 @@ class LoadMenuByCategory extends MenuEvent {
   List<Object> get props => [category];
 }
 
+class SearchMenuItems extends MenuEvent {
+  final String query;
+
+  const SearchMenuItems(this.query);
+
+  @override
+  List<Object> get props => [query];
+}
+
 class LoadMenuItem extends MenuEvent {
   final String id;
 
@@ -72,6 +81,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   MenuBloc(this._repository) : super(MenuInitial()) {
     on<LoadMenuByCategory>(_onLoadMenuByCategory);
     on<LoadMenuItem>(_onLoadMenuItem);
+    on<SearchMenuItems>(_onSearchMenuItems);
   }
 
   Future<void> _onLoadMenuByCategory(
@@ -81,6 +91,19 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     emit(MenuLoading());
     try {
       final items = await _repository.getMenuItems(event.category);
+      emit(MenuLoaded(items));
+    } catch (e) {
+      emit(MenuError(e.toString()));
+    }
+  }
+
+  Future<void> _onSearchMenuItems(
+    SearchMenuItems event,
+    Emitter<MenuState> emit,
+  ) async {
+    emit(MenuLoading());
+    try {
+      final items = await _repository.searchMenuItems(event.query);
       emit(MenuLoaded(items));
     } catch (e) {
       emit(MenuError(e.toString()));

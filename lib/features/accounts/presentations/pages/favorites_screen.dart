@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/home/data/entities/favorite_coffee.dart';
@@ -59,7 +60,10 @@ class _FavoritesScreenState extends State<FavoritesScreen>
 
   Widget _buildContent(BuildContext context, FavoriteState state) {
     if (state is FavoriteLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+          child: CircularProgressIndicator(
+        color: mDarkBrown,
+      ));
     }
 
     if (state is FavoriteError) {
@@ -75,6 +79,8 @@ class _FavoritesScreenState extends State<FavoritesScreen>
 
       return RefreshIndicator(
         onRefresh: _onRefresh,
+        color: mDarkBrown,
+        backgroundColor: Colors.white,
         child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -124,13 +130,6 @@ class _FavoritesScreenState extends State<FavoritesScreen>
     );
   }
 
-  String toTitleCase(String text) {
-    return text.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
-  }
-
   Widget _buildFavoriteItem(BuildContext context, FavoriteCoffee coffee) {
     MenuOption menuOption = MenuOption(type: coffee.type, size: coffee.size);
     return GestureDetector(
@@ -175,7 +174,9 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                       height: 100,
                       color: Colors.grey[300],
                       child: const Center(
-                        child: CircularProgressIndicator(),
+                        child: CircularProgressIndicator(
+                          color: mDarkBrown,
+                        ),
                       ),
                     );
                   },
@@ -187,7 +188,7 @@ class _FavoritesScreenState extends State<FavoritesScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      toTitleCase(coffee.name),
+                      Helper().toTitleCase(coffee.name),
                       style: const TextStyle(
                         color: mBrown,
                         fontWeight: FontWeight.bold,

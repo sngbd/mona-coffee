@@ -26,6 +26,7 @@ dependencies:
   path_provider: ^2.1.5
   logger: ^2.4.0
   http: ^1.2.2
+  intl: ^0.20.1
 
 dev_dependencies:
   flutter_test:

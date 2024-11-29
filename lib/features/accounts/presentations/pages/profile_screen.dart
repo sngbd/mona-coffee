@@ -18,6 +18,8 @@ class ProfileScreen extends StatelessWidget {
     Sizer().init(context);
 
     return RefreshIndicator(
+      color: mDarkBrown,
+      backgroundColor: Colors.white,
       onRefresh: () async {
         context.read<ProfileBloc>().add(InitializeProfileState());
       },

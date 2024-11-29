@@ -64,4 +64,21 @@ class MenuRepository {
       throw Exception('Failed to load menu item: $e');
     }
   }
+
+  Future<List<MenuItem>> searchMenuItems(String query) async {
+    query = query.toLowerCase();
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection('menu')
+          .where('name', isGreaterThanOrEqualTo: query)
+          .where('name', isLessThanOrEqualTo: '$query\uf8ff')
+          .get();
+      return snapshot.docs
+          .map((doc) => MenuItem.fromFirestore(
+              doc.id, doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to search menu items: $e');
+    }
+  }
 }

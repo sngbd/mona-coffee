@@ -148,6 +148,10 @@ class _HomeContentState extends State<HomeContent> {
     _menuBloc.add(LoadMenuByCategory(categories[index]));
   }
 
+  void _onSearchChanged(String query) {
+    _menuBloc.add(SearchMenuItems(query));
+  }
+
   @override
   Widget build(BuildContext context) {
     final String? name = context.read<ProfileBloc>().state.name;
@@ -193,6 +197,7 @@ class _HomeContentState extends State<HomeContent> {
 
   Widget _buildSearchBar() {
     return TextField(
+      onChanged: _onSearchChanged,
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
@@ -221,6 +226,7 @@ class _HomeContentState extends State<HomeContent> {
   Widget _buildCategoryList() {
     return SizedBox(
       height: 36,
+      width: double.infinity,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
@@ -267,6 +273,7 @@ class _HomeContentState extends State<HomeContent> {
           borderRadius: BorderRadius.circular(10),
         ),
         elevation: 4,
+        shadowColor: Colors.black,
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -351,7 +358,10 @@ class _HomeContentState extends State<HomeContent> {
       child: BlocBuilder<MenuBloc, MenuState>(
         builder: (context, state) {
           if (state is MenuLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+                child: CircularProgressIndicator(
+              color: mDarkBrown,
+            ));
           }
 
           if (state is MenuError) {
@@ -365,7 +375,7 @@ class _HomeContentState extends State<HomeContent> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.7,
               ),
               itemBuilder: (context, index) {
                 final menuItem = state.items[index];

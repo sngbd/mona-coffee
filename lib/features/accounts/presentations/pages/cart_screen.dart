@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
-import 'package:mona_coffee/models/order_model.dart';
+import 'package:mona_coffee/core/utils/helper.dart';
+import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
+import 'package:mona_coffee/features/accounts/presentations/blocs/cart_bloc.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
+import 'package:mona_coffee/features/home/data/entities/menu_option.dart';
+import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -15,37 +20,88 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Cart',
-          style: TextStyle(
-            color: mDarkBrown,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+    return RefreshIndicator(
+      color: mDarkBrown,
+      backgroundColor: Colors.white,
+      onRefresh: () async {
+        context.read<CartBloc>().add(LoadCart());
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          title: const Text(
+            'Cart',
+            style: TextStyle(
+              color: mDarkBrown,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: BlocBuilder<CartBloc, CartState>(
+            builder: (context, state) {
+              if (!_isOngoing) {
+                return _buildPastOrders();
+              }
+              if (state is CartLoading) {
+                return const Center(
+                    child: CircularProgressIndicator(color: mDarkBrown));
+              } else if (state is CartError) {
+                return Center(child: Text('Error: ${state.message}'));
+              } else if (state is CartLoaded) {
+                final cartItems = state.items;
+                if (cartItems.isEmpty) {
+                  return const Center(child: Text('Your cart is empty'));
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildToggle(),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: cartItems.length,
+                        itemBuilder: (context, index) {
+                          return _buildOrderCard(cartItems[index]);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return const Center(child: Text('Loading cart...'));
+            },
           ),
         ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildToggle(),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
-                itemCount: orders.length,
-                itemBuilder: (context, index) {
-                  return _buildOrderCard(orders[index]);
+        floatingActionButton: BlocBuilder<CartBloc, CartState>(
+          builder: (context, state) {
+            if (state is CartLoaded && state.items.isNotEmpty) {
+              return FloatingActionButton.extended(
+                onPressed: () {
+                  // Handle checkout action
                 },
-              ),
-            ),
-          ],
+                label: const Text(
+                  'Checkout',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.shopping_cart_checkout,
+                  color: Colors.white,
+                ),
+                backgroundColor: mBrown,
+              );
+            }
+            return const SizedBox.shrink();
+          },
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }
@@ -103,10 +159,22 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildOrderCard(Order order) {
+  Widget _buildOrderCard(CartItem cart) {
     return GestureDetector(
-      onTap: () {
-        context.goNamed('checkout');
+      onTap: () async {
+        MenuRepository menuRepository = MenuRepository();
+        final item = await menuRepository.getMenuItem(cart.name);
+        MenuOption option = MenuOption(type: cart.type, size: cart.size);
+        Navigator.push(
+          // ignore: use_build_context_synchronously
+          context,
+          MaterialPageRoute(
+            builder: (context) => ItemDetailScreen(
+              item: item,
+              option: option,
+            ),
+          ),
+        );
       },
       child: Card(
         color: Colors.white,
@@ -120,8 +188,8 @@ class _CartScreenState extends State<CartScreen> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(5),
-                child: Image.asset(
-                  order.imageUrl,
+                child: Image.network(
+                  cart.imageUrl,
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,
@@ -133,37 +201,60 @@ class _CartScreenState extends State<CartScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order.orderDate,
-                      style: const TextStyle(color: mBrown),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      order.coffeeName,
+                      Helper().toTitleCase(cart.name),
                       style: const TextStyle(
                         color: mBrown,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      order.type,
+                      cart.type,
                       style: const TextStyle(color: mBrown),
                     ),
                     const SizedBox(
-                      height: 10,
+                      height: 5,
                     ),
                     Text(
-                      '${order.quantity}x',
+                      cart.size,
+                      style: const TextStyle(color: mBrown),
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    Text(
+                      '${cart.quantity}x',
                       style: const TextStyle(color: mBrown),
                     ),
                   ],
                 ),
               ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: mBrown),
+                onPressed: () => context.read<CartBloc>().add(
+                      RemoveFromCart(cart.compositeKey),
+                    ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPastOrders() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildToggle(),
+        const Expanded(
+          child: Center(
+            child: Text(
+              'You have no past orders',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
