@@ -1,6 +1,6 @@
 name: mona_coffee
 description: "Your personal guide to discovering the perfect coffee."
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -16,6 +16,7 @@ dependencies:
   equatable: ^2.0.5
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  firebase_storage: ^12.3.4
   flutter_bloc: ^8.1.6
   cloud_firestore: ^5.4.4
   flutter_spinkit: ^5.2.1

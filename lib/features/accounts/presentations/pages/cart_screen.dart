@@ -4,6 +4,7 @@ import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
 import 'package:mona_coffee/features/accounts/presentations/blocs/cart_bloc.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/checkout_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/home/data/entities/menu_option.dart';
 import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
@@ -82,7 +83,12 @@ class _CartScreenState extends State<CartScreen> {
             if (state is CartLoaded && state.items.isNotEmpty) {
               return FloatingActionButton.extended(
                 onPressed: () {
-                  // Handle checkout action
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CheckoutScreen(),
+                    ),
+                  );
                 },
                 label: const Text(
                   'Checkout',

@@ -46,4 +46,6 @@ class CartItem {
       timestamp: map['timestamp'],
     );
   }
+
+
 }

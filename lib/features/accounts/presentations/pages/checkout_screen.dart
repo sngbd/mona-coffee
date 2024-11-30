@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
 import 'package:mona_coffee/features/accounts/presentations/payments/bank_selection_dialog.dart';
 import 'package:mona_coffee/features/accounts/presentations/payments/qris_selection_dialog.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/delivery_method_selector.dart';
@@ -16,8 +18,11 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  String? _selectedTemperature;
   String _selectedDeliveryMethod = 'Delivery';
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+  bool isLoading = true;
+  List<CartItem> cartItems = [];
 
   final Map<String, String> _deliveryIcons = {
     'Delivery': 'assets/icons/delivery_icon.svg',
@@ -27,15 +32,67 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String deliveryAddress = 'No saved address';
   TimeOfDay? selectedTime;
-
   bool isEditing = false;
 
-  final TextEditingController _addressController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    _fetchCartItems();
+  }
+
+  Future<void> _fetchCartItems() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final cartSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('cart')
+            .get();
+
+        final items = cartSnapshot.docs.map((doc) {
+          final data = doc.data();
+          return CartItem(
+            compositeKey: data['compositeKey'] ?? '',
+            name: data['name'] ?? '',
+            type: data['type'] ?? '',
+            size: data['size'] ?? '',
+            price: double.parse((data['price'] ?? 0).toStringAsFixed(0)),
+            quantity: data['quantity'] ?? 1,
+            imageUrl: data['imageUrl'] ?? '',
+            timestamp: data['timestamp'] ?? Timestamp.now(),
+          );
+        }).toList();
+
+        setState(() {
+          cartItems = items;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching cart items: $e');
+      }
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
     _addressController.dispose();
+    _notesController.dispose();
     super.dispose();
+  }
+
+  double _getSubtotal() {
+    return cartItems.fold(
+        0, (total, item) => total + (item.price * item.quantity));
+  }
+
+  double _getTotal() {
+    return _getSubtotal() + 15000 + 2000;
   }
 
   // Fungsi untuk menampilkan time picker
@@ -85,23 +142,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: mLightPink,
       appBar: _buildAppBar(context),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDeliverySection(),
-            const SizedBox(height: 12),
-            _buildDeliveryAddress(),
-            const SizedBox(height: 12),
-            _buildNotesSection(),
-            const SizedBox(height: 12),
-            _buildOrderDetails(),
-            const SizedBox(height: 20),
-            _buildPaymentMethods(),
-          ],
-        ),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: mBrown))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDeliverySection(),
+                  const SizedBox(height: 12),
+                  _buildDeliveryAddress(),
+                  const SizedBox(height: 12),
+                  _buildNotesSection(),
+                  const SizedBox(height: 12),
+                  _buildOrderDetails(),
+                  const SizedBox(height: 20),
+                  _buildPaymentMethods(),
+                ],
+              ),
+            ),
     );
   }
 
@@ -258,6 +317,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           SizedBox(
             height: 60,
             child: TextField(
+              controller: _notesController, // Tambahkan controller
               maxLength: 200,
               decoration: InputDecoration(
                 filled: true,
@@ -299,103 +359,68 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildOrderItem(),
+          if (cartItems.isEmpty)
+            const Center(child: Text('No items in cart'))
+          else
+            ...cartItems.map((item) => _buildOrderItem(item)),
           const Divider(),
-          // Price Details
-          _buildPriceRow('Subtotal', 'Rp 50.000'),
+          _buildPriceRow('Subtotal', 'Rp ${_getSubtotal().toStringAsFixed(0)}'),
           _buildPriceRow('Delivery Fee', 'Rp 15.000'),
-          _buildPriceRow('Discount', 'Rp 0'),
           _buildPriceRow('Other Fee', 'Rp 2.000'),
           const Divider(),
-          _buildPriceRow('Total', 'Rp 67.000', isTotal: true),
+          _buildPriceRow('Total', 'Rp ${_getTotal().toStringAsFixed(0)}',
+              isTotal: true),
         ],
       ),
     );
   }
 
-  Widget _buildOrderItem() {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: Image.asset(
-            'assets/images/coffee.png',
-            width: 70,
-            height: 70,
-            fit: BoxFit.cover,
+  Widget _buildOrderItem(CartItem cartItem) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.network(
+              cartItem.imageUrl,
+              width: 70,
+              height: 70,
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '1x Mocha Latte',
-                style: TextStyle(color: mBrown, fontWeight: FontWeight.bold),
-              ),
-              // Wrap Row in Padding instead of Container with negative margin
-              Padding(
-                padding: const EdgeInsets.only(
-                    right: 10), // Add padding to other elements
-                child: Row(
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${cartItem.quantity}x ${cartItem.name}',
+                  style: const TextStyle(
+                      color: mBrown, fontWeight: FontWeight.bold),
+                ),
+                Row(
                   children: [
-                    Transform.translate(
-                      offset: const Offset(
-                          -10, 0), // Move radio group left by 10 pixels
-                      child: Row(
-                        children: [
-                          // Hot Option
-                          Radio<String>(
-                            value: 'Hot',
-                            groupValue: _selectedTemperature,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _selectedTemperature = value;
-                              });
-                            },
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          const Text('Hot',
-                              style: TextStyle(color: mDarkBrown)),
-                          const SizedBox(width: 16),
-                          // Iced Option
-                          Radio<String>(
-                            value: 'Iced',
-                            groupValue: _selectedTemperature,
-                            onChanged: (String? value) {
-                              setState(() {
-                                _selectedTemperature = value;
-                              });
-                            },
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          const Text('Iced',
-                              style: TextStyle(color: mDarkBrown)),
-                        ],
-                      ),
+                    Text(
+                      '${cartItem.size} - ${cartItem.type}',
+                      style: const TextStyle(color: mDarkBrown),
                     ),
                   ],
                 ),
-              ),
-              const Text('Medium', style: TextStyle(color: mDarkBrown)),
-            ],
+              ],
+            ),
           ),
-        ),
-        TextButton(
-          onPressed: () {
-            context.goNamed('update_order');
-          },
-          child: const Text('Edit',
-              style: TextStyle(color: mBrown, fontWeight: FontWeight.w600)),
-        ),
-      ],
+          Text(
+            'Rp ${cartItem.price * cartItem.quantity}',
+            style: const TextStyle(color: mDarkBrown),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildPaymentMethods() {
+    final total = _getTotal();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -409,64 +434,68 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            _buildPaymentButton('E-banking'),
+            _buildPaymentButton('E-banking', total),
             const SizedBox(width: 8),
-            _buildPaymentButton('QRIS'),
+            _buildPaymentButton('QRIS', total),
             const SizedBox(width: 8),
-            _buildPaymentButton('E-wallet'),
+            _buildPaymentButton('E-wallet', total),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildPaymentButton(String label) {
+  Widget _buildPaymentButton(String label, double amount) {
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
-          if (label == 'E-banking') {
-            showDialog(
-              context: context,
-              builder: (context) => BankSelectionDialog(
-                amount: 67000,
-                onBankSelected: (bank) {
-                  // Handle bank selection here
-                  // You can add more logic here, like navigating to the next screen
-                },
-                onCancel: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            );
-          } else if (label == 'E-wallet') {
-            showDialog(
-              context: context,
-              builder: (context) => EWalletSelectionDialog(
-                amount: 67000,
-                onEWalletSelected: (wallet) {
-                  // Handle e-wallet selection here
-                  // Tambahkan logika pemrosesan e-wallet di sini
-                },
-                onCancel: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            );
-          } else if (label == 'QRIS') {
-            // Get the total amount from your order details
-            double totalAmount = 67000;
-
-            showDialog(
-              context: context,
-              builder: (context) => QRISSelectionDialog(
-                amount: totalAmount,
-                onCancel: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            );
+          switch (label) {
+            case 'E-banking':
+              showDialog(
+                context: context,
+                builder: (context) => BankSelectionDialog(
+                  amount: amount,
+                  onCancel: () => Navigator.of(context).pop(),
+                  userName: 'Lorenzo',
+                  address: _addressController.text,
+                  timeToCome: selectedTime.toString(),
+                  notes: _notesController.text,
+                  orderType: _selectedDeliveryMethod,
+                  cartItems: cartItems,
+                ),
+              );
+              break;
+            case 'E-wallet':
+              showDialog(
+                context: context,
+                builder: (context) => EWalletSelectionDialog(
+                  amount: amount,
+                  onCancel: () => Navigator.of(context).pop(),
+                  userName: 'Lorenzo',
+                  address: _addressController.text,
+                  timeToCome: selectedTime.toString(),
+                  notes: _notesController.text,
+                  orderType: _selectedDeliveryMethod,
+                  cartItems: cartItems,
+                ),
+              );
+              break;
+            case 'QRIS':
+              showDialog(
+                context: context,
+                builder: (context) => QRISSelectionDialog(
+                  amount: amount,
+                  onCancel: () => Navigator.of(context).pop(),
+                  userName: 'Lorenzo',
+                  address: _addressController.text,
+                  timeToCome: selectedTime.toString(),
+                  notes: _notesController.text,
+                  orderType: _selectedDeliveryMethod,
+                  cartItems: cartItems,
+                ),
+              );
+              break;
           }
-          // Handle other payment methods here
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: mBrown,

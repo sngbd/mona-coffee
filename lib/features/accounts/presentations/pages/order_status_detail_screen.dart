@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/home/presentation/pages/home_screen.dart';
 
 class OrderStatusDetailScreen extends StatelessWidget {
   const OrderStatusDetailScreen({super.key});
@@ -13,8 +14,15 @@ class OrderStatusDetailScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: mDarkBrown),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios, color: mDarkBrown),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(),
+              ),
+            );
+          },
         ),
         title: const Text(
           'Order Status Details',
@@ -78,7 +86,6 @@ class OrderStatusDetailScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Handle open in maps
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: mBrown,

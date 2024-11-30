@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/order_status_detail_screen.dart';
 
 class DeliveryPaymentSuccessScreen extends StatelessWidget {
   const DeliveryPaymentSuccessScreen({super.key});
@@ -54,7 +55,12 @@ class DeliveryPaymentSuccessScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Handle track order
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OrderStatusDetailScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: mBrown,
