@@ -4,8 +4,14 @@ import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item_repo.dart';
 
 class CartRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+
+  CartRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   List<CartItem> _cartItems = [];
 

@@ -56,6 +56,8 @@ class RemoveImageProfileAction extends FormEvent {}
 
 class FormProfileSubmitted extends FormEvent {}
 
+class ResetProfileForm extends FormEvent {}
+
 enum FormStatusProfile {
   initial,
   invalid,
@@ -151,11 +153,15 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
         final user = await _authenticationRepository.getProfileData();
 
         final tempDir = await getTemporaryDirectory();
-        final fileAvatar = File('${tempDir.path}/${user.email}.png');
+        File fileAvatar = File('${tempDir.path}/${user.email}.png');
 
         if (user.avatar != null) {
           final bytes = base64Decode(user.avatar!);
           await fileAvatar.writeAsBytes(bytes);
+        } else {
+          final byteData = await rootBundle.load('assets/images/blank.png');
+          fileAvatar = File('${tempDir.path}/temp_asset.png');
+          await fileAvatar.writeAsBytes(byteData.buffer.asUint8List());
         }
 
         emit(state.copyWith(
@@ -303,6 +309,10 @@ class ProfileBloc extends Bloc<FormEvent, ProfileState> {
       emit(state.copyWith(
         verifyEmail: event.verifyEmail,
       ));
+    });
+
+    on<ResetProfileForm>((event, emit) {
+      emit(const ProfileState());
     });
   }
 

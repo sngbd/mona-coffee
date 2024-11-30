@@ -48,7 +48,10 @@ class MonaCoffeeApp extends StatelessWidget {
       auth: FirebaseAuth.instance,
     );
     final menuRepository = MenuRepository();
-    final cartRepository = CartRepository();
+    final cartRepository = CartRepository(
+      firestore: FirebaseFirestore.instance,
+      auth: FirebaseAuth.instance,
+    );
 
     final favoriteBloc = FavoriteBloc(repository: favoriteRepository);
     final menuBloc = MenuBloc(menuRepository);

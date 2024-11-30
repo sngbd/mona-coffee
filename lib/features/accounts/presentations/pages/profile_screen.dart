@@ -53,6 +53,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   context.read<SignOutBloc>().add(SignOutRequested());
+                  context.read<ProfileBloc>().add(ResetProfileForm());
                 },
               ),
             ),
