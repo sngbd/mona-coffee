@@ -56,7 +56,18 @@ class CheckoutRepository {
       'createdAt': Timestamp.now(),
     };
 
-    await _firestore.collection('transactions').add(transactionData);
-  }
+    final batch = _firestore.batch();
 
+    final transactionRef = _firestore.collection('transactions').doc();
+    batch.set(transactionRef, transactionData);
+
+    final userTransactionRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('user-transactions')
+        .doc();
+    batch.set(userTransactionRef, transactionData);
+
+    await batch.commit();
+  }
 }

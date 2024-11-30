@@ -12,8 +12,7 @@ import 'package:mona_coffee/features/accounts/presentations/pages/order_status_d
 import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_delivery_order_detail_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_dinein_order_detail_screen.dart';
-import 'package:mona_coffee/features/admin/presentations/pages/admin_edit_menu.dart';
-import 'package:mona_coffee/features/admin/presentations/pages/admin_item_detail.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_home_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_orders_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_past_orders_detail_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_profile_screen.dart';
@@ -121,6 +120,13 @@ final List<GoRoute> configRouter = [
     },
   ),
   GoRoute(
+    path: '/admin-home',
+    name: 'admin-home',
+    pageBuilder: (BuildContext context, GoRouterState state) {
+      return slideFromRight(state, const AdminHomeScreen());
+    },
+  ),
+  GoRoute(
     path: '/favorites',
     name: 'favorites',
     builder: (BuildContext context, GoRouterState state) {
@@ -192,25 +198,18 @@ final List<GoRoute> configRouter = [
       return const OrderStatusDetailScreen();
     },
   ),
-  GoRoute(
-    path: '/admin-item-detail',
-    name: 'admin-item-detail',
-    builder: (BuildContext context, GoRouterState state) {
-      return const AdminItemDetail();
-    },
-  ),
-  GoRoute(
-    path: '/admin-edit-menu',
-    name: 'admin-edit-menu',
-    builder: (BuildContext context, GoRouterState state) {
-      return const AdminEditMenu();
-    },
-  ),
   // GoRoute(
-  //   path: '/admin-home',
-  //   name: 'admin-home',
+  //   path: '/admin-item-detail',
+  //   name: 'admin-item-detail',
   //   builder: (BuildContext context, GoRouterState state) {
-  //     return const AdminHomeContent();
+  //     return const AdminItemDetail(menuItem: menuitem);
+  //   },
+  // ),
+  // GoRoute(
+  //   path: '/admin-edit-menu',
+  //   name: 'admin-edit-menu',
+  //   builder: (BuildContext context, GoRouterState state) {
+  //     return const AdminEditMenu();
   //   },
   // ),
   GoRoute(

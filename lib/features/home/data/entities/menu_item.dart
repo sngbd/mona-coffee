@@ -9,6 +9,7 @@ class MenuItem {
   final int smallPrice;
   final double rating;
   final int ratingCount;
+  final int stock;
 
   MenuItem({
     required this.name,
@@ -21,6 +22,7 @@ class MenuItem {
     required this.smallPrice,
     required this.rating,
     required this.ratingCount,
+    required this.stock,
   });
 
   factory MenuItem.fromFirestore(String docId, Map<String, dynamic> data) {
@@ -35,6 +37,7 @@ class MenuItem {
       smallPrice: data['smallPrice'] ?? 0,
       rating: (data['rating'] ?? 0).toDouble(),
       ratingCount: data['ratingCount'] ?? 0,
+      stock: data['stock'] ?? 0,
     );
   }
 
