@@ -44,11 +44,9 @@ class CheckoutRepository {
       'orderType': orderType,
       'items': cartItems.map((item) => item.toMap()).toList(),
       'totalAmount': amount,
-      'paymentMethod': bankName != null
+      'paymentMethod': bankName != ""
           ? 'E-Banking'
-          : walletName != null
-              ? 'E-Wallet'
-              : 'QRIS',
+          : (walletName != "" ? 'E-Wallet' : 'QRIS'),
       'bankName': bankName,
       'ewalletName': walletName,
       'transferProof': transferProofBase64,
@@ -57,15 +55,14 @@ class CheckoutRepository {
     };
 
     final batch = _firestore.batch();
-
     final transactionRef = _firestore.collection('transactions').doc();
-    batch.set(transactionRef, transactionData);
-
     final userTransactionRef = _firestore
         .collection('users')
         .doc(user.uid)
         .collection('user-transactions')
-        .doc();
+        .doc(transactionRef.id);
+
+    batch.set(transactionRef, transactionData);
     batch.set(userTransactionRef, transactionData);
 
     await batch.commit();
