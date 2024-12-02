@@ -73,9 +73,7 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const DineInSeatReceiveScreen(
-              seatNumber: '3A',
-            ),
+            builder: (context) => const DineInSeatReceiveScreen(),
           ),
         );
         break;

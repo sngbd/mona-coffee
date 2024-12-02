@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 
 class DineInSeatReceiveScreen extends StatelessWidget {
-  final String seatNumber;
 
   const DineInSeatReceiveScreen({
     super.key,
-    required this.seatNumber,
   });
 
   @override
@@ -21,27 +19,15 @@ class DineInSeatReceiveScreen extends StatelessWidget {
               const Spacer(flex: 2),
 
               // Thank you text and seat number container
-              Column(
+              const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Thank you for your order!\nHere\'s your seat number',
+                  Text(
+                    'Thank you for your order!\nYou will get your seat number soon',
                     style: TextStyle(
                       color: mDarkBrown,
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 60),
-
-                  // Seat Number Display
-                  Text(
-                    seatNumber,
-                    style: const TextStyle(
-                      color: mDarkBrown,
-                      fontSize: 100,
-                      fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),

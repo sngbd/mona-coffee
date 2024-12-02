@@ -54,6 +54,10 @@ class CheckoutRepository {
       'createdAt': Timestamp.now(),
     };
 
+    if (orderType.toLowerCase() == 'dine-in') {
+      transactionData['seatNumber'] = '';
+    }
+
     final batch = _firestore.batch();
     final transactionRef = _firestore.collection('transactions').doc();
     final userTransactionRef = _firestore

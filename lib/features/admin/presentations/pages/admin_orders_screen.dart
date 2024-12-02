@@ -27,14 +27,16 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
 
   void _navigateToOrderDetail(
       BuildContext context, Map<String, dynamic> orderData) {
-    if (orderData['status'] == 'pending') {
+    if (orderData['status'] == 'pending' ||
+        orderData['status'] == 'processing' ||
+        orderData['status'] == 'completed') {
       final method = orderData['orderType'] as String;
       if (method.toLowerCase() == 'dine-in') {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) =>
-                AdminDineInOrderDetailScreen(orderData: orderData),
+                AdminDineInOrderDetailScreen(orderData: orderData, ordersRepository: _repository,),
           ),
         );
       } else {
@@ -348,49 +350,101 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             // Action button
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: status == 'pending'
-                    ? () async {
-                        setState(() {
-                          _isLoading = true;
-                        });
-                        try {
-                          await _repository.updateOrderStatus(
-                              orderId, userId, 'processing');
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        } finally {
-                          setState(() {
-                            _isLoading = false;
-                          });
-                        }
-                      }
-                    : () {
-                        // Handle track order
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: mBrown,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (status == 'processing') ...[
+                    ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              try {
+                                await _repository.updateOrderStatus(
+                                    orderId, userId, 'completed');
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
+                                }
+                              } finally {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mBrown,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      )
-                    : Text(
-                        status == 'pending' ? 'Accept order' : 'Track order',
-                        style: const TextStyle(color: Colors.white),
                       ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Finish Order',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  ElevatedButton(
+                    onPressed: status == 'pending'
+                        ? () async {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            try {
+                              await _repository.updateOrderStatus(
+                                  orderId, userId, 'processing');
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            } finally {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            }
+                          }
+                        : () {
+                            // Handle track order
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: mBrown,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            status == 'pending'
+                                ? 'Accept Order'
+                                : 'Track Order',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                  ),
+                ],
               ),
             ),
           ],

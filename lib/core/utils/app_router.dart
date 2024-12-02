@@ -47,7 +47,7 @@ class AppRouter {
 
       if (authState is AuthAuthenticated) {
         context.read<ProfileBloc>().add(InitializeProfileState());
-        return '/home';
+        return '/admin-home';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }
@@ -184,9 +184,7 @@ final List<GoRoute> configRouter = [
     path: '/dinein-seat-receive',
     name: 'dinein-seat-receive',
     builder: (BuildContext context, GoRouterState state) {
-      return const DineInSeatReceiveScreen(
-        seatNumber: '3A',
-      );
+      return const DineInSeatReceiveScreen();
     },
   ),
   GoRoute(

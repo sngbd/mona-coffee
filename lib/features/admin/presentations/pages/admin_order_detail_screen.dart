@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +20,153 @@ class AdminOrderDetailScreen extends StatelessWidget {
       decimalDigits: 0,
     );
     return formatCurrency.format(price);
+  }
+
+  void _showImagePreview(BuildContext context, String base64Image) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Semi-transparent black background
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  color: Colors.black.withOpacity(0.7),
+                ),
+              ),
+              // Interactive viewer for zoom and pan
+              InteractiveViewer(
+                panEnabled: true,
+                boundaryMargin: const EdgeInsets.all(20),
+                minScale: 0.5,
+                maxScale: 4,
+                child: Image.memory(
+                  base64Decode(base64Image),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      color: Colors.white,
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.error_outline,
+                              size: 48, color: mDarkBrown),
+                          SizedBox(height: 8),
+                          Text(
+                            'Failed to load image',
+                            style: TextStyle(color: mDarkBrown),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Close button
+              Positioned(
+                top: 40,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTransferProofCard(
+      BuildContext context, String? transferProofBase64) {
+    if (transferProofBase64 == null || transferProofBase64.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: mDarkBrown),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Transfer Proof',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: mDarkBrown,
+                  ),
+                ),
+                // Hint text for preview
+                Text(
+                  'Tap image to preview',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onTap: () => _showImagePreview(context, transferProofBase64),
+                  child: Image.memory(
+                    base64Decode(transferProofBase64),
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: 200,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: double.infinity,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline,
+                                size: 48, color: mDarkBrown),
+                            SizedBox(height: 8),
+                            Text(
+                              'Failed to load transfer proof',
+                              style: TextStyle(color: mDarkBrown),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -322,6 +471,8 @@ class AdminOrderDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            _buildTransferProofCard(context, orderData['transferProof']),
           ],
         ),
       ),
