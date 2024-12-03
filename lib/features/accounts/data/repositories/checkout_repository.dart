@@ -17,7 +17,7 @@ class CheckoutRepository {
   Future<void> confirmTransaction({
     required String userName,
     required String address,
-    required String timeToCome,
+    required Timestamp? timeToCome,
     required String notes,
     required String orderType,
     required List<CartItem> cartItems,
@@ -26,7 +26,6 @@ class CheckoutRepository {
     String? bankName,
     String? walletName,
   }) async {
-
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
@@ -44,11 +43,9 @@ class CheckoutRepository {
       'orderType': orderType,
       'items': cartItems.map((item) => item.toMap()).toList(),
       'totalAmount': amount,
-      'paymentMethod': bankName != null
+      'paymentMethod': bankName != '' && bankName != null
           ? 'E-Banking'
-          : walletName != null
-              ? 'E-Wallet'
-              : 'QRIS',
+          : (walletName != null && walletName != '' ? 'E-Wallet' : 'QRIS'),
       'bankName': bankName,
       'ewalletName': walletName,
       'transferProof': transferProofBase64,

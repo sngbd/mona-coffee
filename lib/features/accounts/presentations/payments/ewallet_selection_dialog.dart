@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
@@ -11,7 +12,7 @@ class EWalletSelectionDialog extends StatelessWidget {
   final double amount;
   final String userName;
   final String address;
-  final String timeToCome;
+  final Timestamp? timeToCome;
   final String notes;
   final String orderType;
   final List<CartItem> cartItems;

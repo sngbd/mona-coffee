@@ -23,7 +23,7 @@ class CartRepository {
         .collection('users')
         .doc(userId)
         .collection('cart')
-        .orderBy('timestamp', descending: true);
+        .orderBy('timestamp', descending: false);
     final querySnapshot = await cartRef.get();
 
     _cartItems =
@@ -108,5 +108,18 @@ class CartRepository {
     }
 
     return docSnapshot.get('quantity');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPastOrders() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final transactionsSnapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('users-transactions')
+        .get();
+
+    return transactionsSnapshot.docs.map((doc) => doc.data()).toList();
   }
 }

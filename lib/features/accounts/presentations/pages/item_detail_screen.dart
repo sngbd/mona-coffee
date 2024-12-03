@@ -479,6 +479,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             Icons.check_circle_outline,
                             Colors.green,
                           );
+                          isInCart = true;
                         }
                       },
                       builder: (context, state) {

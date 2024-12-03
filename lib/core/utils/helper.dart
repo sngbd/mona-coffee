@@ -1,5 +1,5 @@
 class Helper {
-  static String getGreeting() {
+  String getGreeting() {
     final hour = DateTime.now().hour;
     if (hour >= 0 && hour <= 12) {
       return 'Good Morning';

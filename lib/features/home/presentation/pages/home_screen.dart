@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
@@ -6,8 +7,6 @@ import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.da
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
-import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
-import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
 import 'package:mona_coffee/features/home/presentation/blocs/menu_bloc.dart';
 import 'package:mona_coffee/models/categories_model.dart';
 import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
@@ -124,20 +123,19 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
-  late final MenuBloc _menuBloc;
   int _selectedCategoryIndex = 0;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
-    _menuBloc = MenuBloc(MenuRepository());
     // Load initial category (Popular)
-    _menuBloc.add(const LoadMenuByCategory('Popular'));
+    context.read<MenuBloc>().add(const LoadMenuByCategory('Popular'));
   }
 
   @override
   void dispose() {
-    _menuBloc.close();
+    context.read<MenuBloc>().close();
     super.dispose();
   }
 
@@ -145,51 +143,46 @@ class _HomeContentState extends State<HomeContent> {
     setState(() {
       _selectedCategoryIndex = index;
     });
-    _menuBloc.add(LoadMenuByCategory(categories[index]));
+    context.read<MenuBloc>().add(LoadMenuByCategory(categories[index]));
   }
 
   void _onSearchChanged(String query) {
-    _menuBloc.add(SearchMenuItems(query));
+    context.read<MenuBloc>().add(SearchMenuItems(query));
   }
 
   @override
   Widget build(BuildContext context) {
-    final String? name = context.read<ProfileBloc>().state.name;
-    return BlocProvider(
-      create: (context) => _menuBloc,
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 50),
-              Text(
-                name == null
-                    ? Helper.getGreeting()
-                    : '${Helper.getGreeting()}, $name',
-                style: const TextStyle(
-                    color: mDarkBrown,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600),
+    final String? name = _firebaseAuth.currentUser!.displayName;
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 50),
+            Text(
+              name == null
+                  ? Helper().getGreeting()
+                  : '${Helper().getGreeting()}, $name',
+              style: const TextStyle(
+                  color: mDarkBrown, fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 36),
+            _buildSearchBar(),
+            const SizedBox(height: 50),
+            const Text(
+              'Categories',
+              style: TextStyle(
+                color: mBrown,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 36),
-              _buildSearchBar(),
-              const SizedBox(height: 50),
-              const Text(
-                'Categories',
-                style: TextStyle(
-                  color: mBrown,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildCategoryList(),
-              const SizedBox(height: 10),
-              _buildMenuGrid(),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            _buildCategoryList(),
+            const SizedBox(height: 10),
+            _buildMenuGrid(),
+          ],
         ),
       ),
     );

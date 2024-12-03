@@ -161,8 +161,8 @@ class _AdminHomeContentState extends State<AdminHomeContent> {
               const SizedBox(height: 50),
               Text(
                 name == null
-                    ? Helper.getGreeting()
-                    : '${Helper.getGreeting()}, $name',
+                    ? Helper().getGreeting()
+                    : '${Helper().getGreeting()}, $name',
                 style: const TextStyle(
                     color: mDarkBrown,
                     fontSize: 20,
