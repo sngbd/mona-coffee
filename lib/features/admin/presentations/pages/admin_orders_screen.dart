@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:intl/intl.dart';
 import 'package:mona_coffee/features/admin/data/repositories/admin_orders_repository.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_dinein_order_detail_screen.dart';
+import 'package:mona_coffee/features/admin/presentations/pages/admin_order_detail_screen.dart';
 
 class AdminOrdersScreen extends StatefulWidget {
   const AdminOrdersScreen({super.key});
@@ -13,6 +15,7 @@ class AdminOrdersScreen extends StatefulWidget {
 
 class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   bool _isOngoing = true;
+  bool _isLoading = false;
   final AdminOrdersRepository _repository = AdminOrdersRepository();
 
   String toTitleCase(String text) {
@@ -20,6 +23,31 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       if (word.isEmpty) return word;
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
     }).join(' ');
+  }
+
+  void _navigateToOrderDetail(
+      BuildContext context, Map<String, dynamic> orderData) {
+    if (orderData['status'] == 'pending' ||
+        orderData['status'] == 'processing' ||
+        orderData['status'] == 'completed') {
+      final method = orderData['orderType'] as String;
+      if (method.toLowerCase() == 'dine-in') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                AdminDineInOrderDetailScreen(orderData: orderData, ordersRepository: _repository,),
+          ),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminOrderDetailScreen(orderData: orderData),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -96,20 +124,28 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        final orderData =
-                            orders[index].data() as Map<String, dynamic>;
+                        // Mengambil QueryDocumentSnapshot langsung dari orders
+                        final doc = orders[index];
+                        final orderData = doc.data() as Map<String, dynamic>;
                         final items = (orderData['items'] as List)
                             .cast<Map<String, dynamic>>();
+                        final userId = orderData['userId'] as String;
 
-                        return _buildOrderCard(
-                          items: items,
-                          date: DateFormat('dd/MM/yyyy').format(
-                            (orderData['createdAt'] as Timestamp).toDate(),
+                        return GestureDetector(
+                          onTap: () =>
+                              _navigateToOrderDetail(context, orderData),
+                          child: _buildOrderCard(
+                            items: items,
+                            date: DateFormat('dd/MM/yyyy').format(
+                              (orderData['createdAt'] as Timestamp).toDate(),
+                            ),
+                            payment: orderData['paymentMethod'] as String,
+                            method: orderData['orderType'] as String,
+                            status: orderData['status'] as String,
+                            showAcceptButton: orderData['status'] == 'pending',
+                            orderId: doc.id,
+                            userId: userId,
                           ),
-                          payment: orderData['paymentMethod'] as String,
-                          method: orderData['orderType'] as String,
-                          status: orderData['status'] as String,
-                          showAcceptButton: orderData['status'] == 'pending',
                         );
                       },
                     );
@@ -183,6 +219,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     required String method,
     required String status,
     required bool showAcceptButton,
+    required String orderId,
+    required String userId,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -312,18 +350,101 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
             // Action button
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: mBrown,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (status == 'processing') ...[
+                    ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              try {
+                                await _repository.updateOrderStatus(
+                                    orderId, userId, 'completed');
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
+                                }
+                              } finally {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mBrown,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Finish Order',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  ElevatedButton(
+                    onPressed: status == 'pending'
+                        ? () async {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            try {
+                              await _repository.updateOrderStatus(
+                                  orderId, userId, 'processing');
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            } finally {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            }
+                          }
+                        : () {
+                            // Handle track order
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: mBrown,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            status == 'pending'
+                                ? 'Accept Order'
+                                : 'Track Order',
+                            style: const TextStyle(color: Colors.white),
+                          ),
                   ),
-                ),
-                child: Text(
-                  showAcceptButton ? 'Accept order' : 'Track order',
-                  style: const TextStyle(color: Colors.white),
-                ),
+                ],
               ),
             ),
           ],

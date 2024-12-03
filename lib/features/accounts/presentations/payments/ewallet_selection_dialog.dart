@@ -47,7 +47,7 @@ class EWalletSelectionDialog extends StatelessWidget {
       accountNumber: ewalletAccounts[walletName],
     ));
 
-    Navigator.of(context).pop(); // Close e-wallet selection dialog
+    Navigator.of(context).pop();
     showDialog(
       context: context,
       builder: (BuildContext context) =>

@@ -4,28 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mona_coffee/features/admin/data/repositories/admin_orders_repository.dart';
 
-class AdminDineInOrderDetailScreen extends StatefulWidget {
+class AdminOrderDetailScreen extends StatelessWidget {
   final Map<String, dynamic> orderData;
-  final AdminOrdersRepository ordersRepository;
 
-  const AdminDineInOrderDetailScreen({
+  const AdminOrderDetailScreen({
     super.key,
     required this.orderData,
-    required this.ordersRepository,
   });
-
-  @override
-  State<AdminDineInOrderDetailScreen> createState() =>
-      _AdminDineInOrderDetailScreenState();
-}
-
-class _AdminDineInOrderDetailScreenState
-    extends State<AdminDineInOrderDetailScreen> {
-  bool isEditing = false;
-  late TextEditingController _seatController;
-  late String seatNumber;
 
   String formatPrice(num price) {
     final formatCurrency = NumberFormat.currency(
@@ -183,129 +169,19 @@ class _AdminDineInOrderDetailScreenState
     );
   }
 
-  Widget _buildCustomerSeatCard() {
-    return SizedBox(
-      width: double.infinity,
-      child: Card(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: mBrown),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Input customer seat:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: mDarkBrown,
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isEditing = true;
-                  });
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: mDarkBrown.withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: isEditing
-                      ? SizedBox(
-                          width: 50,
-                          child: TextField(
-                            controller: _seatController,
-                            style: const TextStyle(color: mDarkBrown),
-                            textAlign: TextAlign.center,
-                            decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 0,
-                              ),
-                              border: OutlineInputBorder(),
-                            ),
-                            onSubmitted: (value) async {
-                              try {
-                                await widget.ordersRepository.updateSeatNumber(
-                                  widget.orderData['orderId'],
-                                  widget.orderData['userId'],
-                                  value,
-                                );
-
-                                setState(() {
-                                  seatNumber = value;
-                                  isEditing = false;
-                                });
-
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Seat number updated successfully'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'Failed to update seat number: ${e.toString()}'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                                setState(() {
-                                  isEditing = true;
-                                });
-                              }
-                            },
-                          ),
-                        )
-                      : Text(
-                          seatNumber.isEmpty ? 'Set seat' : seatNumber,
-                          style: TextStyle(
-                            color: mDarkBrown,
-                            fontStyle: seatNumber.isEmpty
-                                ? FontStyle.italic
-                                : FontStyle.normal,
-                          ),
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    seatNumber = widget.orderData['seatNumber'] ?? '';
-    _seatController = TextEditingController(text: seatNumber);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final items =
-        (widget.orderData['items'] as List).cast<Map<String, dynamic>>();
+    final items = (orderData['items'] as List).cast<Map<String, dynamic>>();
     final subtotal = items.fold<num>(
       0,
-      (total, item) =>
-          total + (item['price'] as num) * (item['quantity'] as num),
+      (total, item) => total + (item['price'] as num) * (item['quantity'] as num),
     );
+    final deliveryFee =
+        orderData['orderType'].toString().toLowerCase() == 'delivery'
+            ? 15000
+            : 0;
     const otherFee = 2000;
-    final total = subtotal + otherFee;
+    final total = subtotal + deliveryFee + otherFee;
 
     return Scaffold(
       backgroundColor: mLightOrange,
@@ -322,7 +198,7 @@ class _AdminDineInOrderDetailScreenState
           style: TextStyle(
             color: mDarkBrown,
             fontSize: 20,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
@@ -331,12 +207,13 @@ class _AdminDineInOrderDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 80),
             // Customer Info Card
             Card(
               color: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: mBrown),
+                side: const BorderSide(color: mDarkBrown),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -353,7 +230,7 @@ class _AdminDineInOrderDetailScreenState
                           ),
                         ),
                         Text(
-                          widget.orderData['userName'] ?? 'Unknown',
+                          orderData['userName'] ?? 'Unknown',
                           style: const TextStyle(color: mDarkBrown),
                         ),
                       ],
@@ -362,9 +239,9 @@ class _AdminDineInOrderDetailScreenState
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Text(
+                            const Text(
                               'Order method: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -372,15 +249,14 @@ class _AdminDineInOrderDetailScreenState
                               ),
                             ),
                             Text(
-                              'Dine-in',
-                              style: TextStyle(color: mDarkBrown),
+                              orderData['orderType'] ?? 'Unknown',
+                              style: const TextStyle(color: mDarkBrown),
                             ),
                           ],
                         ),
                         Text(
                           DateFormat('dd/MM/yyyy').format(
-                            (widget.orderData['createdAt'] as Timestamp)
-                                .toDate(),
+                            (orderData['createdAt'] as Timestamp).toDate(),
                           ),
                           style: const TextStyle(color: mDarkBrown),
                         ),
@@ -415,8 +291,8 @@ class _AdminDineInOrderDetailScreenState
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        (widget.orderData['notes']?.isNotEmpty ?? false)
-                            ? widget.orderData['notes']!
+                        (orderData['notes']?.isNotEmpty ?? false)
+                            ? orderData['notes']!
                             : 'Tidak ada notes',
                         style: const TextStyle(color: mDarkBrown),
                       ),
@@ -426,17 +302,13 @@ class _AdminDineInOrderDetailScreenState
               ),
             ),
 
-            // Customer Seat Card
-            const SizedBox(height: 16),
-            _buildCustomerSeatCard(),
-
             // Order Summary Card
             const SizedBox(height: 16),
             Card(
               color: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: mBrown),
+                side: const BorderSide(color: mDarkBrown),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -521,6 +393,22 @@ class _AdminDineInOrderDetailScreenState
                         ),
                       ],
                     ),
+                    if (deliveryFee > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Delivery Fee',
+                            style: TextStyle(color: mDarkBrown),
+                          ),
+                          Text(
+                            formatPrice(deliveryFee),
+                            style: const TextStyle(color: mDarkBrown),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -557,17 +445,17 @@ class _AdminDineInOrderDetailScreenState
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Payment Method and Button
+                    // Payment Method
                     Center(
                       child: Text(
                         () {
                           final paymentMethod =
-                              widget.orderData['paymentMethod'] ?? 'Unknown';
+                              orderData['paymentMethod'] ?? 'Unknown';
                           if (paymentMethod.toLowerCase() == 'e-banking') {
-                            return 'Pay with ${widget.orderData['bankName'] ?? 'Bank'}';
+                            return 'Pay with ${orderData['bankName'] ?? 'Bank'}';
                           } else if (paymentMethod.toLowerCase() ==
                               'e-wallet') {
-                            return 'Pay with ${widget.orderData['ewalletName'] ?? 'E-Wallet'}';
+                            return 'Pay with ${orderData['ewalletName'] ?? 'E-Wallet'}';
                           } else {
                             return 'Pay with $paymentMethod';
                           }
@@ -584,16 +472,10 @@ class _AdminDineInOrderDetailScreenState
               ),
             ),
             const SizedBox(height: 16),
-            _buildTransferProofCard(context, widget.orderData['transferProof']),
+            _buildTransferProofCard(context, orderData['transferProof']),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _seatController.dispose();
-    super.dispose();
   }
 }
