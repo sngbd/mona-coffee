@@ -15,7 +15,8 @@ import 'package:mona_coffee/features/home/data/entities/menu_option.dart';
 import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({super.key});
+  final bool isOngoing;
+  const CartScreen({super.key, this.isOngoing = true});
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -32,6 +33,7 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
     super.initState();
     _cartBloc = context.read<CartBloc>();
     WidgetsBinding.instance.addObserver(this);
+    _isOngoing = widget.isOngoing;
     _loadCart();
   }
 
@@ -108,6 +110,7 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
           title: const Text(
             'Cart',
             style: TextStyle(

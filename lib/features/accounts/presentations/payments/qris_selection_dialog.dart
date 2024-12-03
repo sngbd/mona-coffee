@@ -9,8 +9,6 @@ import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
 import 'package:mona_coffee/features/accounts/presentations/blocs/cart_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/blocs/checkout_bloc.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payment_success_screen.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/dinein_seat_receive_screen.dart';
 import 'package:mona_coffee/features/home/presentation/pages/home_screen.dart';
 
 class QRISSelectionDialog extends StatefulWidget {
@@ -50,44 +48,6 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
       setState(() {
         _transferProof = File(image.path);
       });
-    }
-  }
-
-  void _navigateAfterSuccessfulTransaction() {
-    switch (widget.orderType) {
-      case 'Delivery':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DeliveryPaymentSuccessScreen(),
-          ),
-        );
-        break;
-      case 'Take-away':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
-        break;
-      case 'Dine-in':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DineInSeatReceiveScreen(
-              seatNumber: '3A',
-            ),
-          ),
-        );
-        break;
-      default:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
     }
   }
 
@@ -144,9 +104,12 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
             Icons.check_circle_outline,
             Colors.green,
           );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _navigateAfterSuccessfulTransaction();
-          });
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(page: 2, isOngoing: false),
+            ),
+          );
         }
       },
       child: BackdropFilter(

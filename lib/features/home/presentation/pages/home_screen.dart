@@ -12,7 +12,9 @@ import 'package:mona_coffee/models/categories_model.dart';
 import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int page;
+  final bool isOngoing;
+  const HomeScreen({super.key, this.page = 0, this.isOngoing = true});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,18 +22,27 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  bool isOngoing = false;
 
-  final List<Widget> _pages = [
-    const HomeContent(),
-    const FavoritesScreen(),
-    const CartScreen(),
-    const ProfileScreen(),
-  ];
+  late List<Widget> _pages;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.page;
+    isOngoing = widget.isOngoing;
+    _pages = [
+      const HomeContent(),
+      const FavoritesScreen(),
+      CartScreen(isOngoing: isOngoing),
+      const ProfileScreen(),
+    ];
   }
 
   @override
@@ -290,7 +301,7 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 10),
               Text(
-                toTitleCase(menuItem.name),
+                Helper().toTitleCase(menuItem.name),
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 16,
@@ -337,13 +348,6 @@ class _HomeContentState extends State<HomeContent> {
         ),
       ),
     );
-  }
-
-  String toTitleCase(String text) {
-    return text.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
   }
 
   Widget _buildMenuGrid() {

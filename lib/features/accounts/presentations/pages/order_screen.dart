@@ -496,6 +496,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
 
   Widget _buildPlatformButton(String bankName, String logoPath) {
     return InkWell(
+      onTap: () {},
       child: Container(
         width: Sizer.screenWidth * 0.4,
         height: 40,
