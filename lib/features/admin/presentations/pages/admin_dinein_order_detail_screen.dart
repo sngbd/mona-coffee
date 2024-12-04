@@ -102,6 +102,51 @@ class _AdminDineInOrderDetailScreenState
     );
   }
 
+  void _updateSeatNumber(String seatNumber) async {
+    final orderId = widget.orderData['orderId'];
+    final userId = widget.orderData['userId'];
+
+    if (seatNumber.isEmpty || orderId == null || userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid seat number or order details'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isEditing = false;
+    });
+
+    try {
+      await widget.ordersRepository
+          .updateSeatNumber(orderId, userId, seatNumber);
+      setState(() {
+        this.seatNumber = seatNumber;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Seat number updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update seat number: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildTransferProofCard(
       BuildContext context, String? transferProofBase64) {
     if (transferProofBase64 == null || transferProofBase64.isEmpty) {
@@ -184,107 +229,109 @@ class _AdminDineInOrderDetailScreenState
   }
 
   Widget _buildCustomerSeatCard() {
-    return SizedBox(
-      width: double.infinity,
-      child: Card(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: mBrown),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Input customer seat:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: mDarkBrown,
-                ),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .doc(widget.orderData['orderId'])
+          .snapshots(),
+      builder: (context, snapshot) {
+        // Determine current seat number with multiple fallback layers
+        String currentSeatNumber = seatNumber;
+
+        if (snapshot.connectionState == ConnectionState.active) {
+          try {
+            if (snapshot.hasData && snapshot.data!.exists) {
+              currentSeatNumber =
+                  snapshot.data!.get('seatNumber') ?? seatNumber;
+            }
+          } on FirebaseException catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error loading seat number: ${e.message}'),
+                backgroundColor: Colors.red,
               ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isEditing = true;
-                  });
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: mDarkBrown.withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(4),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Unable to retrieve seat number'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+
+        return SizedBox(
+          width: double.infinity,
+          child: Card(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: mBrown),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Input customer seat:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: mDarkBrown,
+                    ),
                   ),
-                  child: isEditing
-                      ? SizedBox(
-                          width: 50,
-                          child: TextField(
-                            controller: _seatController,
-                            style: const TextStyle(color: mDarkBrown),
-                            textAlign: TextAlign.center,
-                            decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 0,
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isEditing = true;
+                        _seatController.text = currentSeatNumber;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: mDarkBrown.withOpacity(0.3)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: isEditing
+                          ? SizedBox(
+                              width: 50,
+                              child: TextField(
+                                controller: _seatController,
+                                style: const TextStyle(color: mDarkBrown),
+                                textAlign: TextAlign.center,
+                                decoration: const InputDecoration(
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 0,
+                                  ),
+                                  border: OutlineInputBorder(),
+                                ),
+                                onSubmitted: (value) =>
+                                    _updateSeatNumber(value.trim()),
                               ),
-                              border: OutlineInputBorder(),
+                            )
+                          : Text(
+                              currentSeatNumber.isEmpty
+                                  ? 'Set seat'
+                                  : currentSeatNumber,
+                              style: TextStyle(
+                                color: mDarkBrown,
+                                fontStyle: currentSeatNumber.isEmpty
+                                    ? FontStyle.italic
+                                    : FontStyle.normal,
+                              ),
                             ),
-                            onSubmitted: (value) async {
-                              try {
-                                await widget.ordersRepository.updateSeatNumber(
-                                  widget.orderData['orderId'],
-                                  widget.orderData['userId'],
-                                  value,
-                                );
-
-                                setState(() {
-                                  seatNumber = value;
-                                  isEditing = false;
-                                });
-
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Seat number updated successfully'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'Failed to update seat number: ${e.toString()}'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                                setState(() {
-                                  isEditing = true;
-                                });
-                              }
-                            },
-                          ),
-                        )
-                      : Text(
-                          seatNumber.isEmpty ? 'Set seat' : seatNumber,
-                          style: TextStyle(
-                            color: mDarkBrown,
-                            fontStyle: seatNumber.isEmpty
-                                ? FontStyle.italic
-                                : FontStyle.normal,
-                          ),
-                        ),
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
