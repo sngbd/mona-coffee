@@ -367,27 +367,17 @@ class _CheckoutScreenState extends State<OrderScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: widget.order['status'] == "pending"
-                    ? Text(
-                        "Pending",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    : widget.order['status'] == "in progress"
-                        ? const Text("In Progress",
-                            style: TextStyle(
-                              color: mDarkBrown,
-                              fontWeight: FontWeight.w600,
-                            ))
-                        : Text(
-                            "Completed",
-                            style: TextStyle(
-                              color: Colors.green[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                child: Text(
+                  Helper().toTitleCase(widget.order['status']),
+                  style: TextStyle(
+                    color: widget.order['status'] == 'pending'
+                        ? Colors.grey[600]
+                        : widget.order['status'] == 'processing'
+                            ? mDarkBrown
+                            : Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),

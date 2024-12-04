@@ -47,7 +47,11 @@ class AppRouter {
 
       if (authState is AuthAuthenticated) {
         context.read<ProfileBloc>().add(InitializeProfileState());
-        return '/admin-home';
+        final email = authState.user.email;
+        if (email == 'admin@coffee.mona') {
+          return '/admin-home';
+        }
+        return '/home';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }

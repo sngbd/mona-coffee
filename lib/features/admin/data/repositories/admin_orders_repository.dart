@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AdminOrdersRepository {
   final FirebaseFirestore _firestore;
@@ -29,6 +31,13 @@ class AdminOrdersRepository {
         batch.update(transactionDoc, {'status': status});
         batch.update(userTransactionDoc, {'status': status});
         await batch.commit();
+
+        final userDoc = await _firestore.collection('users').doc(userId).get();
+        final fcmToken = userDoc.data()?['fcmToken'];
+
+        if (fcmToken != null) {
+          await _sendNotification(fcmToken, orderId, status);
+        }
       } else {
         throw Exception('Order document not found.');
       }
@@ -41,6 +50,30 @@ class AdminOrdersRepository {
       }
     } catch (e) {
       throw Exception('Failed to update order status: $e');
+    }
+  }
+
+  Future<void> _sendNotification(
+      String fcmToken, String orderId, String status) async {
+    final Uri fcmUrl = Uri.parse(
+        'https://mona-notification-70908a918a0e.herokuapp.com/send-notification');
+
+    final Map<String, String> notifPayload = {
+      'token': fcmToken,
+      'title': 'Order Status Updated',
+      'body': 'Your order $orderId status has been updated to $status.',
+    };
+
+    final http.Response response = await http.post(
+      fcmUrl,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(notifPayload),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send notification: ${response.body}');
     }
   }
 

@@ -491,7 +491,9 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                                 style: TextStyle(
                                   color: order['status'] == 'pending'
                                       ? Colors.grey[600]
-                                      : Colors.green,
+                                      : order['status'] == 'processing'
+                                          ? mDarkBrown
+                                          : Colors.green,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
