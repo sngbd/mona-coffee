@@ -16,6 +16,7 @@ class AdminOrdersScreen extends StatefulWidget {
 class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   bool _isOngoing = true;
   bool _isLoading = false;
+  String? _loadingOrderId;
   final AdminOrdersRepository _repository = AdminOrdersRepository();
 
   String toTitleCase(String text) {
@@ -29,7 +30,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       BuildContext context, Map<String, dynamic> orderData) {
     if (orderData['status'] == 'pending' ||
         orderData['status'] == 'processing' ||
-        orderData['status'] == 'completed') {
+        orderData['status'] == 'completed' ||
+        orderData['status'] == 'cancelled') {
       final method = orderData['orderType'] as String;
       if (method.toLowerCase() == 'dine-in') {
         Navigator.push(
@@ -47,6 +49,28 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _updateOrderStatus(
+      String orderId, String userId, String status) async {
+    setState(() {
+      _loadingOrderId = orderId;
+      _isLoading = true;
+    });
+    try {
+      await _repository.updateOrderStatus(orderId, userId, status);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _loadingOrderId = null;
+        _isLoading = false;
+      });
     }
   }
 
@@ -222,6 +246,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     required String orderId,
     required String userId,
   }) {
+    final bool isProcessingThisOrder = _loadingOrderId == orderId && _isLoading;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -355,34 +381,17 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                 children: [
                   if (status == 'processing') ...[
                     ElevatedButton(
-                      onPressed: _isLoading
+                      onPressed: isProcessingThisOrder
                           ? null
-                          : () async {
-                              setState(() {
-                                _isLoading = true;
-                              });
-                              try {
-                                await _repository.updateOrderStatus(
-                                    orderId, userId, 'completed');
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Error: $e')),
-                                  );
-                                }
-                              } finally {
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                              }
-                            },
+                          : () =>
+                              _updateOrderStatus(orderId, userId, 'completed'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: mBrown,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: _isLoading
+                      child: isProcessingThisOrder
                           ? const SizedBox(
                               width: 20,
                               height: 20,
@@ -396,54 +405,60 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                               style: TextStyle(color: Colors.white),
                             ),
                     ),
-                    const SizedBox(width: 8),
                   ],
-                  ElevatedButton(
-                    onPressed: status == 'pending'
-                        ? () async {
-                            setState(() {
-                              _isLoading = true;
-                            });
-                            try {
-                              await _repository.updateOrderStatus(
-                                  orderId, userId, 'processing');
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e')),
-                                );
-                              }
-                            } finally {
-                              setState(() {
-                                _isLoading = false;
-                              });
-                            }
-                          }
-                        : () {
-                            // Handle track order
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: mBrown,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  if (status == 'pending') ...[
+                    ElevatedButton(
+                      onPressed: isProcessingThisOrder
+                          ? null
+                          : () =>
+                              _updateOrderStatus(orderId, userId, 'cancelled'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
+                      child: isProcessingThisOrder
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Cancel Order',
+                              style: TextStyle(color: Colors.white),
                             ),
-                          )
-                        : Text(
-                            status == 'pending'
-                                ? 'Accept Order'
-                                : 'Track Order',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: isProcessingThisOrder
+                          ? null
+                          : () =>
+                              _updateOrderStatus(orderId, userId, 'processing'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mBrown,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: isProcessingThisOrder
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Accept Order',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                    ),
+                  ],
                 ],
               ),
             ),
