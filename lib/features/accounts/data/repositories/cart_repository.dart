@@ -4,8 +4,14 @@ import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item_repo.dart';
 
 class CartRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+
+  CartRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   List<CartItem> _cartItems = [];
 
@@ -17,7 +23,7 @@ class CartRepository {
         .collection('users')
         .doc(userId)
         .collection('cart')
-        .orderBy('timestamp', descending: true);
+        .orderBy('timestamp', descending: false);
     final querySnapshot = await cartRef.get();
 
     _cartItems =
@@ -102,5 +108,18 @@ class CartRepository {
     }
 
     return docSnapshot.get('quantity');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPastOrders() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final transactionsSnapshot = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('users-transactions')
+        .get();
+
+    return transactionsSnapshot.docs.map((doc) => doc.data()).toList();
   }
 }

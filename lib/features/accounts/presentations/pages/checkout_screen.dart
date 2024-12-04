@@ -1,9 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/core/utils/helper.dart';
+import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
 import 'package:mona_coffee/features/accounts/presentations/payments/bank_selection_dialog.dart';
 import 'package:mona_coffee/features/accounts/presentations/payments/qris_selection_dialog.dart';
@@ -18,6 +23,7 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   String _selectedDeliveryMethod = 'Delivery';
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -92,14 +98,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   double _getTotal() {
-    return _getSubtotal() + 15000 + 2000;
+    return _getSubtotal() +
+        (_selectedDeliveryMethod == 'Delivery' ? 15000 : 0) +
+        2000;
   }
 
   // Fungsi untuk menampilkan time picker
   Future<void> _selectTime(BuildContext context) async {
+    final now = DateTime.now();
+    final TimeOfDay tmpThirty = TimeOfDay(
+      hour: TimeOfDay.now().hour,
+      minute: TimeOfDay.now().minute + 30,
+    );
+
+    final tmpDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      tmpThirty.hour,
+      tmpThirty.minute,
+    );
+
+    final TimeOfDay thirtyMinutesFromNow = TimeOfDay(
+      hour: tmpDateTime.hour,
+      minute: tmpDateTime.minute,
+    );
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: selectedTime ?? TimeOfDay.now(),
+      initialTime: selectedTime ?? thirtyMinutesFromNow,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -122,19 +149,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
 
     if (picked != null && picked != selectedTime) {
-      setState(() {
-        selectedTime = picked;
-      });
+      final now = DateTime.now();
+      final pickedDateTime =
+          DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+      final thirtyMinutesFromNowDateTime = DateTime(now.year, now.month,
+          now.day, thirtyMinutesFromNow.hour, thirtyMinutesFromNow.minute);
+
+      if (pickedDateTime.isBefore(thirtyMinutesFromNowDateTime)) {
+        Flasher.showSnackBar(
+          context,
+          'Error',
+          'Invalid time selected - must be at least 30 minutes from now',
+          Icons.error_outline,
+          Colors.red,
+        );
+      } else {
+        setState(() {
+          selectedTime = picked;
+        });
+      }
     }
   }
 
   // Format waktu untuk ditampilkan
   String _formatTime(TimeOfDay? time) {
     if (time == null) return 'Select time to visit';
-    final hour = time.hourOfPeriod;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$minute $period';
+    final now = DateTime.now();
+    final selectedDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+    final format = DateFormat.jm();
+    return format.format(selectedDateTime);
   }
 
   @override
@@ -365,7 +414,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ...cartItems.map((item) => _buildOrderItem(item)),
           const Divider(),
           _buildPriceRow('Subtotal', 'Rp ${_getSubtotal().toStringAsFixed(0)}'),
-          _buildPriceRow('Delivery Fee', 'Rp 15.000'),
+          _selectedDeliveryMethod == 'Delivery'
+              ? _buildPriceRow('Delivery Fee', 'Rp 15.000')
+              : const SizedBox.shrink(),
           _buildPriceRow('Other Fee', 'Rp 2.000'),
           const Divider(),
           _buildPriceRow('Total', 'Rp ${_getTotal().toStringAsFixed(0)}',
@@ -395,7 +446,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${cartItem.quantity}x ${cartItem.name}',
+                  '${cartItem.quantity}x ${Helper().toTitleCase(cartItem.name)}',
                   style: const TextStyle(
                       color: mBrown, fontWeight: FontWeight.bold),
                 ),
@@ -434,11 +485,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            _buildPaymentButton('E-banking', total),
+            _buildPaymentButton('E-Banking', total),
             const SizedBox(width: 8),
             _buildPaymentButton('QRIS', total),
             const SizedBox(width: 8),
-            _buildPaymentButton('E-wallet', total),
+            _buildPaymentButton('E-Wallet', total),
           ],
         ),
       ],
@@ -446,34 +497,82 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildPaymentButton(String label, double amount) {
+    final now = DateTime.now();
+    final bool isPaymentDisabled = (_selectedDeliveryMethod == 'Delivery' &&
+            (_addressController.text.trim() == "" ||
+                _addressController.text == "No saved address")) ||
+        (_selectedDeliveryMethod == 'Take-away' && selectedTime == null) ||
+        (_selectedDeliveryMethod == 'Dine-in' && selectedTime == null);
+    if (isPaymentDisabled) {
+      return Expanded(
+        child: ElevatedButton(
+          onPressed: () {
+            Flasher.showSnackBar(
+              context,
+              'Error',
+              _selectedDeliveryMethod == "Delivery"
+                  ? 'Please enter your delivery address'
+                  : "Please select time to come",
+              Icons.error_outline,
+              Colors.red,
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
           switch (label) {
-            case 'E-banking':
+            case 'E-Banking':
               showDialog(
                 context: context,
                 builder: (context) => BankSelectionDialog(
                   amount: amount,
                   onCancel: () => Navigator.of(context).pop(),
-                  userName: 'Lorenzo',
+                  userName: _firebaseAuth.currentUser!.displayName ?? "",
                   address: _addressController.text,
-                  timeToCome: selectedTime.toString(),
+                  timeToCome: selectedTime == null
+                      ? null
+                      : Timestamp.fromDate(DateTime(
+                          now.year,
+                          now.month,
+                          now.day,
+                          selectedTime!.hour,
+                          selectedTime!.minute,
+                        )),
                   notes: _notesController.text,
                   orderType: _selectedDeliveryMethod,
                   cartItems: cartItems,
                 ),
               );
               break;
-            case 'E-wallet':
+            case 'E-Wallet':
               showDialog(
                 context: context,
                 builder: (context) => EWalletSelectionDialog(
                   amount: amount,
                   onCancel: () => Navigator.of(context).pop(),
-                  userName: 'Lorenzo',
+                  userName: _firebaseAuth.currentUser!.displayName ?? "",
                   address: _addressController.text,
-                  timeToCome: selectedTime.toString(),
+                  timeToCome: selectedTime == null
+                      ? null
+                      : Timestamp.fromDate(DateTime(
+                          now.year,
+                          now.month,
+                          now.day,
+                          selectedTime!.hour,
+                          selectedTime!.minute,
+                        )),
                   notes: _notesController.text,
                   orderType: _selectedDeliveryMethod,
                   cartItems: cartItems,
@@ -486,9 +585,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 builder: (context) => QRISSelectionDialog(
                   amount: amount,
                   onCancel: () => Navigator.of(context).pop(),
-                  userName: 'Lorenzo',
+                  userName: _firebaseAuth.currentUser!.displayName ?? "",
                   address: _addressController.text,
-                  timeToCome: selectedTime.toString(),
+                  timeToCome: selectedTime == null
+                      ? null
+                      : Timestamp.fromDate(DateTime(
+                          now.year,
+                          now.month,
+                          now.day,
+                          selectedTime!.hour,
+                          selectedTime!.minute,
+                        )),
                   notes: _notesController.text,
                   orderType: _selectedDeliveryMethod,
                   cartItems: cartItems,

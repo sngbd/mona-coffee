@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/web.dart';
 import 'package:mona_coffee/core/utils/app_router.dart';
 import 'package:mona_coffee/core/utils/router_bloc_listenable.dart';
 import 'package:mona_coffee/core/utils/theme.dart';
@@ -27,8 +29,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MonaCoffeeApp());
+}
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  Logger().i("Handling a background message: ${message.messageId}");
 }
 
 class MonaCoffeeApp extends StatelessWidget {
@@ -50,7 +57,10 @@ class MonaCoffeeApp extends StatelessWidget {
       auth: FirebaseAuth.instance,
     );
     final menuRepository = MenuRepository();
-    final cartRepository = CartRepository();
+    final cartRepository = CartRepository(
+      firestore: FirebaseFirestore.instance,
+      auth: FirebaseAuth.instance,
+    );
 
     final checkoutRepository = CheckoutRepository(
       firestore: FirebaseFirestore.instance,

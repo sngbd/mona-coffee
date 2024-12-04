@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
@@ -71,7 +72,7 @@ class SelectPaymentMethod extends CheckoutEvent {
 class ConfirmTransaction extends CheckoutEvent {
   final String userName;
   final String address;
-  final String timeToCome;
+  final Timestamp? timeToCome;
   final String notes;
   final String orderType;
   final List<CartItem> cartItems;

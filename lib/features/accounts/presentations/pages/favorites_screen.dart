@@ -74,7 +74,15 @@ class _FavoritesScreenState extends State<FavoritesScreen>
       final favorites = state.favorites;
 
       if (favorites.isEmpty) {
-        return const Center(child: Text('No favorites yet'));
+        return const Center(
+          child: Text(
+            'No favorites yet',
+            style: TextStyle(
+              fontSize: 15.0,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
       }
 
       return RefreshIndicator(

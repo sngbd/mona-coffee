@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
+import 'package:http/http.dart' as http;
 
 class CheckoutRepository {
   final FirebaseFirestore _firestore;
@@ -17,7 +18,7 @@ class CheckoutRepository {
   Future<void> confirmTransaction({
     required String userName,
     required String address,
-    required String timeToCome,
+    required Timestamp? timeToCome,
     required String notes,
     required String orderType,
     required List<CartItem> cartItems,
@@ -26,8 +27,8 @@ class CheckoutRepository {
     String? bankName,
     String? walletName,
   }) async {
-
     final user = _auth.currentUser;
+    final userName = _auth.currentUser?.displayName;
     if (user == null) throw Exception('User not authenticated');
 
     final transferProofFile = File(transferProofPath);
@@ -44,9 +45,9 @@ class CheckoutRepository {
       'orderType': orderType,
       'items': cartItems.map((item) => item.toMap()).toList(),
       'totalAmount': amount,
-      'paymentMethod': bankName != ""
+      'paymentMethod': bankName != '' && bankName != null
           ? 'E-Banking'
-          : (walletName != "" ? 'E-Wallet' : 'QRIS'),
+          : (walletName != null && walletName != '' ? 'E-Wallet' : 'QRIS'),
       'bankName': bankName,
       'ewalletName': walletName,
       'transferProof': transferProofBase64,
@@ -70,5 +71,40 @@ class CheckoutRepository {
     batch.set(userTransactionRef, transactionData);
 
     await batch.commit();
+
+    final userDoc = await _firestore
+        .collection('users')
+        .doc('vAIocCXkuNh8GmGJttsjnO41eX82')
+        .get();
+    final fcmToken = userDoc.data()?['fcmToken'];
+
+    if (fcmToken != null) {
+      await _sendNotification(fcmToken, userName);
+    }
+  }
+
+  Future<void> _sendNotification(String fcmToken, String? userName) async {
+    userName = userName ?? '';
+    final Uri fcmUrl = Uri.parse(
+        'https://mona-notification-70908a918a0e.herokuapp.com/send-notification');
+
+    final Map<String, String> notifPayload = {
+      'token': fcmToken,
+      'title': 'A New Order',
+      'body':
+          'There is a new order from ${userName == '' ? 'a customer' : 'customer $userName'}.',
+    };
+
+    final http.Response response = await http.post(
+      fcmUrl,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(notifPayload),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send notification: ${response.body}');
+    }
   }
 }

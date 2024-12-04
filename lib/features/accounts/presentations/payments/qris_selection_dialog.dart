@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
+import 'package:mona_coffee/features/accounts/presentations/blocs/cart_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/blocs/checkout_bloc.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payment_success_screen.dart';
-import 'package:mona_coffee/features/accounts/presentations/pages/dinein_seat_receive_screen.dart';
 import 'package:mona_coffee/features/home/presentation/pages/home_screen.dart';
 
 class QRISSelectionDialog extends StatefulWidget {
@@ -16,7 +16,7 @@ class QRISSelectionDialog extends StatefulWidget {
   final double amount;
   final String userName;
   final String address;
-  final String timeToCome;
+  final Timestamp? timeToCome;
   final String notes;
   final String orderType;
   final List<CartItem> cartItems;
@@ -48,42 +48,6 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
       setState(() {
         _transferProof = File(image.path);
       });
-    }
-  }
-
-  void _navigateAfterSuccessfulTransaction() {
-    switch (widget.orderType) {
-      case 'Delivery':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DeliveryPaymentSuccessScreen(),
-          ),
-        );
-        break;
-      case 'Take-away':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
-        break;
-      case 'Dine-in':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DineInSeatReceiveScreen(),
-          ),
-        );
-        break;
-      default:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
     }
   }
 
@@ -132,6 +96,7 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
             Colors.red,
           );
         } else if (state is CheckoutSuccess) {
+          context.read<CartBloc>().add(ClearCart());
           Flasher.showSnackBar(
             context,
             'Success',
@@ -139,9 +104,12 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
             Icons.check_circle_outline,
             Colors.green,
           );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _navigateAfterSuccessfulTransaction();
-          });
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(page: 2, isOngoing: false),
+            ),
+          );
         }
       },
       child: BackdropFilter(

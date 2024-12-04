@@ -1,38 +1,57 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:logger/web.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/cart_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/item_detail_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
-import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
-import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
 import 'package:mona_coffee/features/home/presentation/blocs/menu_bloc.dart';
 import 'package:mona_coffee/models/categories_model.dart';
 import 'package:mona_coffee/features/home/data/entities/menu_item.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int page;
+  final bool isOngoing;
+  const HomeScreen({super.key, this.page = 0, this.isOngoing = true});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
-  final List<Widget> _pages = [
-    const HomeContent(),
-    const FavoritesScreen(),
-    const CartScreen(),
-    const ProfileScreen(),
-  ];
+  int _selectedIndex = 0;
+  bool isOngoing = false;
+
+  late List<Widget> _pages;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+
+    _selectedIndex = widget.page;
+    isOngoing = widget.isOngoing;
+    _pages = [
+      const HomeContent(),
+      const FavoritesScreen(),
+      CartScreen(isOngoing: isOngoing),
+      const ProfileScreen(),
+    ];
   }
 
   @override
@@ -43,6 +62,38 @@ class _HomeScreenState extends State<HomeScreen> {
         children: _pages,
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  void _initializeNotifications() async {
+    await _firebaseMessaging.requestPermission();
+
+    var android = const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings = InitializationSettings(android: android);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        _showNotification(message.notification!);
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      Logger().i("Message clicked!");
+    });
+  }
+
+  void _showNotification(RemoteNotification notification) async {
+    var androidDetails = const AndroidNotificationDetails(
+        'channel_id', 'channel_name',
+        channelDescription: 'description');
+    var notificationDetails = NotificationDetails(android: androidDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      notification.title,
+      notification.body,
+      notificationDetails,
     );
   }
 
@@ -124,20 +175,19 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
-  late final MenuBloc _menuBloc;
   int _selectedCategoryIndex = 0;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
-    _menuBloc = MenuBloc(MenuRepository());
     // Load initial category (Popular)
-    _menuBloc.add(const LoadMenuByCategory('Popular'));
+    context.read<MenuBloc>().add(const LoadMenuByCategory('Popular'));
   }
 
   @override
   void dispose() {
-    _menuBloc.close();
+    context.read<MenuBloc>().close();
     super.dispose();
   }
 
@@ -145,51 +195,46 @@ class _HomeContentState extends State<HomeContent> {
     setState(() {
       _selectedCategoryIndex = index;
     });
-    _menuBloc.add(LoadMenuByCategory(categories[index]));
+    context.read<MenuBloc>().add(LoadMenuByCategory(categories[index]));
   }
 
   void _onSearchChanged(String query) {
-    _menuBloc.add(SearchMenuItems(query));
+    context.read<MenuBloc>().add(SearchMenuItems(query));
   }
 
   @override
   Widget build(BuildContext context) {
-    final String? name = context.read<ProfileBloc>().state.name;
-    return BlocProvider(
-      create: (context) => _menuBloc,
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 50),
-              Text(
-                name == null
-                    ? Helper.getGreeting()
-                    : '${Helper.getGreeting()}, $name',
-                style: const TextStyle(
-                    color: mDarkBrown,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600),
+    final String? name = _firebaseAuth.currentUser!.displayName;
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 50),
+            Text(
+              name == null
+                  ? Helper().getGreeting()
+                  : '${Helper().getGreeting()}, $name',
+              style: const TextStyle(
+                  color: mDarkBrown, fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 36),
+            _buildSearchBar(),
+            const SizedBox(height: 50),
+            const Text(
+              'Categories',
+              style: TextStyle(
+                color: mBrown,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 36),
-              _buildSearchBar(),
-              const SizedBox(height: 50),
-              const Text(
-                'Categories',
-                style: TextStyle(
-                  color: mBrown,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildCategoryList(),
-              const SizedBox(height: 10),
-              _buildMenuGrid(),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            _buildCategoryList(),
+            const SizedBox(height: 10),
+            _buildMenuGrid(),
+          ],
         ),
       ),
     );
@@ -297,7 +342,7 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 10),
               Text(
-                toTitleCase(menuItem.name),
+                Helper().toTitleCase(menuItem.name),
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 16,
@@ -344,13 +389,6 @@ class _HomeContentState extends State<HomeContent> {
         ),
       ),
     );
-  }
-
-  String toTitleCase(String text) {
-    return text.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
   }
 
   Widget _buildMenuGrid() {

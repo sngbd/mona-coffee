@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/web.dart';
 import 'package:mona_coffee/features/authentications/data/entities/user_profile.dart';
@@ -20,10 +21,13 @@ class AuthenticationRepository {
     required String password,
   }) async {
     try {
-      return await _firebaseAuth.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      await _updateFcmToken(userCredential.user);
+      return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message);
     }
@@ -41,7 +45,10 @@ class AuthenticationRepository {
         idToken: googleAuth?.idToken,
       );
 
-      return await _firebaseAuth.signInWithCredential(credential);
+      UserCredential userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
+      await _updateFcmToken(userCredential.user);
+      return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message);
     }
@@ -53,6 +60,7 @@ class AuthenticationRepository {
       await _google.signOut();
     }
     await _firebaseAuth.signOut();
+    await _refreshFcmToken();
   }
 
   User? get currentUser => _firebaseAuth.currentUser;
@@ -154,5 +162,33 @@ class AuthenticationRepository {
   Future<void> sendResetPassword(String email) async {
     Logger().i('Sending password reset email to $email');
     await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+
+  Future<void> _updateFcmToken(User? user) async {
+    if (user == null) {
+      throw Exception('User is not authenticated');
+    }
+
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    final DocumentReference userRef =
+        _firestore.collection('users').doc(user.uid);
+    await userRef.set({
+      'fcmToken': fcmToken,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> _refreshFcmToken() async {
+    await FirebaseMessaging.instance.deleteToken();
+    String? newFcmToken = await FirebaseMessaging.instance.getToken();
+    if (newFcmToken != null) {
+      final User? user = _firebaseAuth.currentUser;
+      if (user != null) {
+        final DocumentReference userRef =
+            _firestore.collection('users').doc(user.uid);
+        await userRef.set({
+          'fcmToken': newFcmToken,
+        }, SetOptions(merge: true));
+      }
+    }
   }
 }
