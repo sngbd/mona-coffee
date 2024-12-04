@@ -32,6 +32,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders.googleMapsApiKey = "AIzaSyAlGKjZoyulPr4fNKLvH7L1veAkWOWqvI8"
     }
 
     defaultConfig {

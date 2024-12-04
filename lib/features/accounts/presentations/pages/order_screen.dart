@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/core/utils/sizer.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/order_tracking_screen.dart';
 
 class OrderScreen extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -111,6 +112,8 @@ class _CheckoutScreenState extends State<OrderScreen> {
             _buildOrderDetails(),
             const SizedBox(height: 20),
             _buildStatus(),
+            const SizedBox(height: 20),
+            _buildMapDriver(),
             const SizedBox(height: 20),
             _buildPaymentMethods(),
           ],
@@ -381,6 +384,17 @@ class _CheckoutScreenState extends State<OrderScreen> {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapDriver() {
+    return _buildSectionContainer(
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: OrderTrackingScreen()),
         ],
       ),
     );

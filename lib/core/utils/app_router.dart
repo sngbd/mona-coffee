@@ -9,6 +9,8 @@ import 'package:mona_coffee/features/accounts/presentations/pages/delivery_payme
 import 'package:mona_coffee/features/accounts/presentations/pages/dinein_seat_receive_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/favorites_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/order_status_detail_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/order_tracking_screen.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/select_address_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/update_order_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_home_screen.dart';
 import 'package:mona_coffee/features/admin/presentations/pages/admin_orders_screen.dart';
@@ -245,6 +247,20 @@ final List<GoRoute> configRouter = [
     name: 'admin-past-order-detail-screen',
     builder: (BuildContext context, GoRouterState state) {
       return const AdminPastOrderDetailScreen();
+    },
+  ),
+  GoRoute(
+    path: '/order-tracking',
+    name: 'order-tracking',
+    builder: (BuildContext context, GoRouterState state) {
+      return const OrderTrackingScreen();
+    },
+  ),
+  GoRoute(
+    path: '/select-address',
+    name: 'select-address',
+    builder: (BuildContext context, GoRouterState state) {
+      return const SelectAddressScreen();
     },
   ),
 ];
