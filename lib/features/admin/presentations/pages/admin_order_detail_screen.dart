@@ -169,6 +169,43 @@ class AdminOrderDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildAddressCard() {
+    if (orderData['orderType'].toString().toLowerCase() != 'delivery') {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: mDarkBrown),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Delivery Address',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: mDarkBrown,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                orderData['address'] ?? 'No address provided',
+                style: const TextStyle(color: mDarkBrown),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = (orderData['items'] as List).cast<Map<String, dynamic>>();
@@ -267,6 +304,8 @@ class AdminOrderDetailScreen extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
+            _buildAddressCard(),
             // Notes Card
             const SizedBox(height: 16),
             SizedBox(

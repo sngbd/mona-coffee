@@ -27,7 +27,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   }
 
   void _navigateToOrderDetail(
-      BuildContext context, Map<String, dynamic> orderData) {
+      BuildContext context, Map<String, dynamic> orderData, String orderId) {
     if (orderData['status'] == 'pending' ||
         orderData['status'] == 'processing' ||
         orderData['status'] == 'completed' ||
@@ -38,7 +38,13 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           context,
           MaterialPageRoute(
             builder: (context) =>
-                AdminDineInOrderDetailScreen(orderData: orderData, ordersRepository: _repository,),
+                AdminDineInOrderDetailScreen(
+              orderData: {
+                ...orderData,
+                'orderId': orderId,
+              },
+              ordersRepository: _repository,
+            ),
           ),
         );
       } else {
@@ -157,7 +163,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
 
                         return GestureDetector(
                           onTap: () =>
-                              _navigateToOrderDetail(context, orderData),
+                              _navigateToOrderDetail(context, orderData, doc.id),
                           child: _buildOrderCard(
                             items: items,
                             date: DateFormat('dd/MM/yyyy').format(
