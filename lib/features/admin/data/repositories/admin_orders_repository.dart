@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:mona_coffee/core/utils/helper.dart';
+
 class AdminOrdersRepository {
   final FirebaseFirestore _firestore;
 
@@ -16,7 +18,7 @@ class AdminOrdersRepository {
   }
 
   Future<void> updateOrderStatus(
-      String orderId, String userId, String status) async {
+      String orderId, String userId, String status, String? reason) async {
     final batch = _firestore.batch();
     final transactionDoc = _firestore.collection('transactions').doc(orderId);
     final userTransactionDoc = _firestore
@@ -32,11 +34,19 @@ class AdminOrdersRepository {
         batch.update(userTransactionDoc, {'status': status});
         await batch.commit();
 
+        final orderItems = transactionData.data()?['items'] as List;
+
         final userDoc = await _firestore.collection('users').doc(userId).get();
         final fcmToken = userDoc.data()?['fcmToken'];
 
         if (fcmToken != null) {
-          await _sendNotification(fcmToken, orderId, status);
+          if (status == 'cancelled') {
+            await _sendNotification(fcmToken,
+                Helper().toTitleCase(orderItems[0]['name']), status, reason);
+          } else {
+            await _sendNotification(
+                fcmToken, Helper().toTitleCase(orderItems[0]['name']), status);
+          }
         }
       } else {
         throw Exception('Order document not found.');
@@ -53,16 +63,24 @@ class AdminOrdersRepository {
     }
   }
 
-  Future<void> _sendNotification(
-      String fcmToken, String orderId, String status) async {
+  Future<void> _sendNotification(String fcmToken, String name, String status,
+      [String? reason]) async {
     final Uri fcmUrl = Uri.parse(
         'https://mona-notification-70908a918a0e.herokuapp.com/send-notification');
 
-    final Map<String, String> notifPayload = {
+    Map<String, String> notifPayload = {
       'token': fcmToken,
       'title': 'Order Status Updated',
-      'body': 'Your order $orderId status has been updated to $status.',
+      'body': 'Your order $name status has been updated to $status.',
     };
+
+    if (status == 'cancelled') {
+      notifPayload['body'] = 'Your order $name has been cancelled.';
+
+      if (reason != null) {
+        notifPayload['body'] = '${notifPayload['body']} Reason: $reason';
+      }
+    }
 
     final http.Response response = await http.post(
       fcmUrl,

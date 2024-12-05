@@ -16,6 +16,8 @@ class EWalletSelectionDialog extends StatelessWidget {
   final String notes;
   final String orderType;
   final List<CartItem> cartItems;
+  final int? deliveryFee;
+  final double? distance;
 
   const EWalletSelectionDialog({
     super.key,
@@ -27,6 +29,8 @@ class EWalletSelectionDialog extends StatelessWidget {
     required this.notes,
     required this.orderType,
     required this.cartItems,
+    required this.deliveryFee,
+    required this.distance,
   });
 
   // Map e-wallet names to their numbers
@@ -66,6 +70,8 @@ class EWalletSelectionDialog extends StatelessWidget {
             notes: notes,
             orderType: orderType,
             cartItems: cartItems,
+            deliveryFee: deliveryFee,
+            distance: distance,
           );
         },
       ),

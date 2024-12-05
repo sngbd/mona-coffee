@@ -20,6 +20,8 @@ class QRISSelectionDialog extends StatefulWidget {
   final String notes;
   final String orderType;
   final List<CartItem> cartItems;
+  final int? deliveryFee;
+  final double? distance;
 
   const QRISSelectionDialog({
     super.key,
@@ -31,6 +33,8 @@ class QRISSelectionDialog extends StatefulWidget {
     required this.notes,
     required this.orderType,
     required this.cartItems,
+    required this.deliveryFee,
+    required this.distance,
   });
 
   @override
@@ -80,6 +84,8 @@ class _QRISSelectionDialogState extends State<QRISSelectionDialog> {
       cartItems: widget.cartItems,
       amount: widget.amount,
       transferProofPath: _transferProof!.path,
+      deliveryFee: widget.deliveryFee,
+      distance: widget.distance
     ));
   }
 

@@ -30,6 +30,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _notesController = TextEditingController();
   bool isLoading = true;
   List<CartItem> cartItems = [];
+  double? distance;
+  int? fee;
 
   final Map<String, String> _deliveryIcons = {
     'Delivery': 'assets/icons/delivery_icon.svg',
@@ -100,7 +102,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   double _getTotal() {
     return _getSubtotal() +
-        (_selectedDeliveryMethod == 'Delivery' ? 15000 : 0) +
+        (_selectedDeliveryMethod == 'Delivery' ? fee ?? 0 : 0) +
         2000;
   }
 
@@ -280,10 +282,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (isDelivery)
+          if (isDelivery)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Expanded(
                   child: Column(
                     children: [
@@ -302,62 +304,74 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           if (result != null) {
                             setState(() {
                               _addressController.text = result['address'];
+                              distance = result['distance'];
+                              fee = result['fee'];
                             });
                           }
                         },
-                        child: const Text(
-                          'Select your delivery address',
-                          style: TextStyle(color: Colors.white),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Select your delivery address',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 5),
                       Text(
                         _addressController.text.isEmpty
                             ? 'No address selected'
                             : _addressController.text,
                         style: const TextStyle(color: mDarkBrown),
                       ),
-                      const SizedBox(height: 20),
                     ],
                   ),
-                )
-              else
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Expanded(
                   child: Text(
                     _formatTime(selectedTime),
                     style: const TextStyle(color: mDarkBrown),
                   ),
                 ),
-              TextButton(
-                onPressed: () {
-                  if (isDelivery) {
-                    setState(() {
-                      if (isEditing) {
-                        // Save the changes
-                        if (_addressController.text.isNotEmpty) {
-                          deliveryAddress = _addressController.text;
+                TextButton(
+                  onPressed: () {
+                    if (isDelivery) {
+                      setState(() {
+                        if (isEditing) {
+                          // Save the changes
+                          if (_addressController.text.isNotEmpty) {
+                            deliveryAddress = _addressController.text;
+                          }
+                          isEditing = false;
+                        } else {
+                          // Start editing
+                          _addressController.text = deliveryAddress;
+                          isEditing = true;
                         }
-                        isEditing = false;
-                      } else {
-                        // Start editing
-                        _addressController.text = deliveryAddress;
-                        isEditing = true;
-                      }
-                    });
-                  } else {
-                    _selectTime(context);
-                  }
-                },
-                child: !isDelivery
-                    ? Text(
-                        !isDelivery ? (isEditing ? 'Save' : 'Edit') : '',
-                        style: const TextStyle(
-                            color: mBrown, fontWeight: FontWeight.w600),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
+                      });
+                    } else {
+                      _selectTime(context);
+                    }
+                  },
+                  child: !isDelivery
+                      ? Text(
+                          !isDelivery ? (isEditing ? 'Save' : 'Edit') : '',
+                          style: const TextStyle(
+                              color: mBrown, fontWeight: FontWeight.w600),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -429,13 +443,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           else
             ...cartItems.map((item) => _buildOrderItem(item)),
           const Divider(),
-          _buildPriceRow('Subtotal', 'Rp ${_getSubtotal().toStringAsFixed(0)}'),
-          _selectedDeliveryMethod == 'Delivery'
-              ? _buildPriceRow('Delivery Fee', 'Rp 15.000')
+          _buildPriceRow('Subtotal', Helper().formatCurrency(_getSubtotal())),
+          _selectedDeliveryMethod == 'Delivery' &&
+                  (fee != null && distance != null)
+              ? _buildPriceRow('Delivery Fee',
+                  '${Helper().formatCurrency(fee!)} (${distance != double.infinity ? distance!.toStringAsFixed(0) : '∞'} km)')
               : const SizedBox.shrink(),
           _buildPriceRow('Other Fee', 'Rp 2.000'),
           const Divider(),
-          _buildPriceRow('Total', 'Rp ${_getTotal().toStringAsFixed(0)}',
+          _buildPriceRow('Total', Helper().formatCurrency(_getTotal()),
               isTotal: true),
         ],
       ),
@@ -478,7 +494,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           Text(
-            'Rp ${cartItem.price * cartItem.quantity}',
+            Helper().formatCurrency(cartItem.price * cartItem.quantity),
             style: const TextStyle(color: mDarkBrown),
           ),
         ],
@@ -515,7 +531,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildPaymentButton(String label, double amount) {
     final now = DateTime.now();
     final bool isPaymentDisabled = (_selectedDeliveryMethod == 'Delivery' &&
-            (_addressController.text.trim() == "" ||
+            (distance == double.infinity ||
+                _addressController.text.trim() == "" ||
                 _addressController.text == "No saved address")) ||
         (_selectedDeliveryMethod == 'Take-away' && selectedTime == null) ||
         (_selectedDeliveryMethod == 'Dine-in' && selectedTime == null);
@@ -569,6 +586,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   notes: _notesController.text,
                   orderType: _selectedDeliveryMethod,
                   cartItems: cartItems,
+                  deliveryFee: fee,
+                  distance: distance,
                 ),
               );
               break;
@@ -592,6 +611,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   notes: _notesController.text,
                   orderType: _selectedDeliveryMethod,
                   cartItems: cartItems,
+                  deliveryFee: fee,
+                  distance: distance,
                 ),
               );
               break;
@@ -615,6 +636,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   notes: _notesController.text,
                   orderType: _selectedDeliveryMethod,
                   cartItems: cartItems,
+                  deliveryFee: fee,
+                  distance: distance,
                 ),
               );
               break;

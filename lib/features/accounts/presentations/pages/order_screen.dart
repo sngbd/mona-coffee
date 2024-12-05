@@ -33,6 +33,8 @@ class _OrderScreenState extends State<OrderScreen> {
   String deliveryAddress = 'No saved address';
   TimeOfDay? selectedTime;
   String? seat;
+  int? fee;
+  double? distance;
   bool isEditing = false;
 
   @override
@@ -48,6 +50,8 @@ class _OrderScreenState extends State<OrderScreen> {
     if (widget.order['orderType'] == 'Dine-in') {
       seat = widget.order['seatNumber'] ?? 'Pending';
     }
+    fee = widget.order['deliveryFee'];
+    distance = widget.order['distance'];
   }
 
   @override
@@ -365,13 +369,16 @@ class _OrderScreenState extends State<OrderScreen> {
           else
             ...cartItems.map((item) => _buildOrderItem(item)),
           const Divider(),
-          _buildPriceRow('Subtotal', 'Rp ${_getSubtotal().toStringAsFixed(0)}'),
+          _buildPriceRow('Subtotal', Helper().formatCurrency(_getSubtotal())),
           _selectedDeliveryMethod == 'Delivery'
-              ? _buildPriceRow('Delivery Fee', 'Rp 15.000')
+              ? (fee != null && distance != null)
+                  ? _buildPriceRow('Delivery Fee',
+                      '${Helper().formatCurrency(fee!)} (${distance != double.infinity ? distance!.toStringAsFixed(0) : '∞'} km)')
+                  : _buildPriceRow('Delivery Fee', 'Data not available')
               : const SizedBox.shrink(),
           _buildPriceRow('Other Fee', 'Rp 2.000'),
           const Divider(),
-          _buildPriceRow('Total', 'Rp ${_getTotal().toStringAsFixed(0)}',
+          _buildPriceRow('Total', Helper().formatCurrency(_getTotal()),
               isTotal: true),
         ],
       ),
@@ -467,7 +474,7 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
           Text(
-            'Rp ${cartItem['price'] * cartItem['quantity']}',
+            Helper().formatCurrency(cartItem['price'] * cartItem['quantity']),
             style: const TextStyle(color: mDarkBrown),
           ),
         ],

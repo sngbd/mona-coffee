@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class Helper {
   String getGreeting() {
     final hour = DateTime.now().hour;
@@ -18,4 +20,14 @@ class Helper {
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
     }).join(' ');
   }
+
+  String formatCurrency(num value) {
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+    return formatter.format(value);
+  }
+
 }

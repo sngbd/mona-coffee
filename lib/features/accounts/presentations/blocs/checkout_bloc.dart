@@ -80,6 +80,8 @@ class ConfirmTransaction extends CheckoutEvent {
   final String transferProofPath;
   final String? bankName;
   final String? walletName;
+  final int? deliveryFee;
+  final double? distance;
 
   const ConfirmTransaction({
     required this.userName,
@@ -90,6 +92,8 @@ class ConfirmTransaction extends CheckoutEvent {
     required this.cartItems,
     required this.amount,
     required this.transferProofPath,
+    this.deliveryFee,
+    this.distance,
     this.bankName,
     this.walletName,
   });
@@ -106,6 +110,8 @@ class ConfirmTransaction extends CheckoutEvent {
         transferProofPath,
         bankName,
         walletName,
+        deliveryFee,
+        distance,
       ];
 }
 
@@ -150,6 +156,8 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         transferProofPath: event.transferProofPath,
         bankName: event.bankName,
         walletName: event.walletName,
+        deliveryFee: event.deliveryFee,
+        distance: event.distance,
       );
 
       emit(CheckoutSuccess());
@@ -157,7 +165,4 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       emit(CheckoutError(e.toString()));
     }
   }
-
 }
-
-

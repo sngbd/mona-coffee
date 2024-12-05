@@ -361,7 +361,7 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 5),
               Text(
-                'From Rp ${menuItem.smallPrice.toString()}',
+                'From ${Helper().formatCurrency(menuItem.smallPrice)}',
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 12,

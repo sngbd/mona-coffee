@@ -37,8 +37,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                AdminDineInOrderDetailScreen(
+            builder: (context) => AdminDineInOrderDetailScreen(
               orderData: {
                 ...orderData,
                 'orderId': orderId,
@@ -58,14 +57,49 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     }
   }
 
-  Future<void> _updateOrderStatus(
-      String orderId, String userId, String status) async {
+  Future<void> _showCancellationDialog(String orderId, String userId) async {
+    final TextEditingController reasonController = TextEditingController();
+    final String? reason = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title:
+              const Text('Cancel Order', style: TextStyle(color: mDarkBrown)),
+          content: TextField(
+            controller: reasonController,
+            decoration: const InputDecoration(
+              hintText: 'Enter reason for cancellation',
+              hintStyle: TextStyle(color: Colors.grey),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: mBrown)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, reasonController.text),
+              child: const Text('Submit', style: TextStyle(color: mBrown)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (reason != null && reason.isNotEmpty) {
+      _updateOrderStatus(orderId, userId, 'cancelled', reason);
+    }
+  }
+
+  Future<void> _updateOrderStatus(String orderId, String userId, String status,
+      [String? reason]) async {
     setState(() {
       _loadingOrderId = orderId;
       _isLoading = true;
     });
     try {
-      await _repository.updateOrderStatus(orderId, userId, status);
+      await _repository.updateOrderStatus(orderId, userId, status, reason);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,8 +196,8 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         final userId = orderData['userId'] as String;
 
                         return GestureDetector(
-                          onTap: () =>
-                              _navigateToOrderDetail(context, orderData, doc.id),
+                          onTap: () => _navigateToOrderDetail(
+                              context, orderData, doc.id),
                           child: _buildOrderCard(
                             items: items,
                             date: DateFormat('dd/MM/yyyy').format(
@@ -416,8 +450,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                     ElevatedButton(
                       onPressed: isProcessingThisOrder
                           ? null
-                          : () =>
-                              _updateOrderStatus(orderId, userId, 'cancelled'),
+                          : () => _showCancellationDialog(orderId, userId),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mona_coffee/core/utils/common.dart';
+import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item_repo.dart';
 import 'package:mona_coffee/features/accounts/data/repositories/cart_repository.dart';
@@ -450,7 +451,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           ),
                         ),
                         Text(
-                          'Rp ${(currentPrice * quantity).toStringAsFixed(0)}',
+                          Helper().formatCurrency(currentPrice * quantity),
                           style: const TextStyle(
                             color: mBrown,
                             fontSize: 18,

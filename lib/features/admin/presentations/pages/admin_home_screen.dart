@@ -254,9 +254,7 @@ class _AdminHomeContentState extends State<AdminHomeContent> {
 
   Widget _buildMenuItem(MenuItem menuItem) {
     return GestureDetector(
-      onTap: () {
-        
-      },
+      onTap: () {},
       child: Card(
         color: Colors.white,
         shape: RoundedRectangleBorder(
@@ -306,7 +304,7 @@ class _AdminHomeContentState extends State<AdminHomeContent> {
               ),
               const SizedBox(height: 5),
               Text(
-                'From Rp ${menuItem.smallPrice.toString()}',
+                'From ${Helper().formatCurrency(menuItem.smallPrice)}',
                 style: const TextStyle(
                   color: mBrown,
                   fontSize: 12,
@@ -321,7 +319,8 @@ class _AdminHomeContentState extends State<AdminHomeContent> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AdminItemDetail(menuItem: menuItem),
+                        builder: (context) =>
+                            AdminItemDetail(menuItem: menuItem),
                       ),
                     );
                   },

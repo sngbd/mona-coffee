@@ -26,6 +26,8 @@ class CheckoutRepository {
     required String transferProofPath,
     String? bankName,
     String? walletName,
+    int? deliveryFee,
+    double? distance,
   }) async {
     final user = _auth.currentUser;
     final userName = _auth.currentUser?.displayName;
@@ -50,6 +52,8 @@ class CheckoutRepository {
           : (walletName != null && walletName != '' ? 'E-Wallet' : 'QRIS'),
       'bankName': bankName,
       'ewalletName': walletName,
+      'deliveryFee': deliveryFee,
+      'distance': distance,
       'transferProof': transferProofBase64,
       'status': 'pending',
       'createdAt': Timestamp.now(),

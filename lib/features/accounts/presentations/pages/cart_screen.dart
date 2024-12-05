@@ -92,7 +92,7 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
 
   String _formatTimestamp(Timestamp timestamp) {
     final DateTime dateTime = timestamp.toDate();
-    final DateFormat formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
+    final DateFormat formatter = DateFormat('hh:mm a - dd/MM/yyyy');
     return formatter.format(dateTime);
   }
 
@@ -441,7 +441,7 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                               Text(
                                 _formatTimestamp(order['orderTime']),
                                 style: const TextStyle(
-                                  color: Colors.grey,
+                                  color: Colors.brown,
                                   fontSize: 12.0,
                                 ),
                               ),
@@ -480,7 +480,7 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                                 height: 5,
                               ),
                               Text(
-                                'Rp${order['totalAmount']}',
+                                Helper().formatCurrency(order['totalAmount']),
                                 style: const TextStyle(
                                   color: mDarkBrown,
                                   fontWeight: FontWeight.bold,

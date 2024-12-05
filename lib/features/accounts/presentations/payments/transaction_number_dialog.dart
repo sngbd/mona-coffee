@@ -24,6 +24,8 @@ class TransactionNumberDialog extends StatefulWidget {
   final String notes;
   final String orderType;
   final List<CartItem> cartItems;
+  final int? deliveryFee;
+  final double? distance;
 
   const TransactionNumberDialog({
     super.key,
@@ -38,6 +40,8 @@ class TransactionNumberDialog extends StatefulWidget {
     required this.notes,
     required this.orderType,
     required this.cartItems,
+    required this.deliveryFee,
+    required this.distance,
   });
 
   @override
@@ -93,6 +97,8 @@ class _TransactionNumberDialogState extends State<TransactionNumberDialog> {
       transferProofPath: _transferProof!.path,
       bankName: widget.bankName,
       walletName: widget.walletName,
+      deliveryFee: widget.deliveryFee,
+      distance: widget.distance,
     ));
   }
 
