@@ -287,7 +287,7 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: mDarkBrown))
           : _errorMessage.isNotEmpty
               ? Center(
                   child: Text(

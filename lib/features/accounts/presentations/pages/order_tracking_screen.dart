@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:logger/web.dart';
+import 'package:mona_coffee/core/utils/common.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final LatLng destinationLocation;
@@ -175,7 +176,16 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order Tracking'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Order Tracking',
+          style: TextStyle(
+            color: mDarkBrown,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: GoogleMap(
         mapType: MapType.normal,
