@@ -1,52 +1,57 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mona_coffee/core/utils/polyline.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
-  const OrderTrackingScreen({super.key});
+  final LatLng destinationLocation;
+
+  const OrderTrackingScreen({super.key, required this.destinationLocation});
 
   @override
   State<OrderTrackingScreen> createState() => OrderTrackingScreenState();
 }
 
 class OrderTrackingScreenState extends State<OrderTrackingScreen> {
-  GoogleMapController? mapController;
-
-  static const LatLng sourceLocation =
-      LatLng(3.5972701734490427, 98.68792492347372);
-  static const LatLng destinationLocation =
-      LatLng(3.5626441083765146, 98.6591347800891);
-
-  Set<Polyline> polylines = {};
-  List<LatLng> polylineCoordinates = [];
-  int index = 0;
-  Timer? timer;
-
   @override
   void initState() {
     super.initState();
     _createPolyline();
     setCustomMarkerIcon();
     startTimer();
+    polylinePoints = [sourceLocation, widget.destinationLocation];
   }
 
   @override
   void dispose() {
     timer?.cancel();
+    mapController?.dispose();
+
     super.dispose();
   }
 
+  GoogleMapController? mapController;
+
+  static const LatLng sourceLocation =
+      LatLng(3.5972701734490427, 98.68792492347372);
+
+  Set<Polyline> polylines = {};
+  List<LatLng> polylinePoints = [sourceLocation];
+  List<LatLng> polylineCoordinates = [];
+  int index = 0;
+  Timer? timer;
+
   BitmapDescriptor sourceIcon = BitmapDescriptor.defaultMarker;
-  BitmapDescriptor destinationIcon = BitmapDescriptor.defaultMarker;
   BitmapDescriptor currentLocationIcon = BitmapDescriptor.defaultMarker;
   void setCustomMarkerIcon() {
-    BitmapDescriptor.asset(ImageConfiguration.empty, "assets/images/mona_marker.png").then(
+    BitmapDescriptor.asset(
+            ImageConfiguration.empty, "assets/images/mona_marker.png")
+        .then(
       (icon) {
         sourceIcon = icon;
       },
     );
-    BitmapDescriptor.asset(ImageConfiguration.empty, "assets/images/scooter_marker.png")
+    BitmapDescriptor.asset(
+            ImageConfiguration.empty, "assets/images/scooter_marker.png")
         .then(
       (icon) {
         currentLocationIcon = icon;
@@ -57,8 +62,8 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
   void _createPolyline() {
     setState(() {
       polylines.add(
-        const Polyline(
-          polylineId: PolylineId('route'),
+        Polyline(
+          polylineId: const PolylineId('route'),
           points: polylinePoints,
           color: Colors.blue,
           width: 5,
@@ -68,19 +73,20 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   void startTimer() async {
-    timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (index < polylinePoints.length - 1) {
         setState(() {
           index++;
-          GoogleMapController? controller = mapController;
-          controller?.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                zoom: 13.5,
-                target: polylinePoints[index],
+          if (mapController != null) {
+            mapController!.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  zoom: 13.5,
+                  target: polylinePoints[index],
+                ),
               ),
-            ),
-          );
+            );
+          }
         });
       } else {
         timer.cancel(); // Stop the timer when the end is reached
@@ -91,6 +97,9 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Order Tracking'),
+      ),
       body: GoogleMap(
         initialCameraPosition: const CameraPosition(
           target: sourceLocation,
@@ -108,11 +117,11 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
             icon: currentLocationIcon,
           ),
           Marker(
-            markerId: const MarkerId(" constation"),
-            position: destinationLocation,
-            icon: destinationIcon,
+            markerId: const MarkerId("destination"),
+            position: widget.destinationLocation,
           ),
         },
+        myLocationEnabled: false,
         polylines: polylines,
         onMapCreated: (controller) {
           mapController = controller;

@@ -493,7 +493,9 @@ class _CartScreenState extends State<CartScreen> with WidgetsBindingObserver {
                                       ? Colors.grey[600]
                                       : order['status'] == 'processing'
                                           ? mDarkBrown
-                                          : Colors.green,
+                                          : order['status'] == 'cancelled'
+                                              ? Colors.red
+                                              : Colors.green,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

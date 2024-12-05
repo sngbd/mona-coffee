@@ -31,10 +31,10 @@ class EWalletSelectionDialog extends StatelessWidget {
 
   // Map e-wallet names to their numbers
   final Map<String, String> ewalletAccounts = const {
-    'GoPay': '081234567890',
-    'DANA': '081234567891',
-    'OVO': '081234567892',
-    'ShopeePay': '081234567893',
+    'GoPay': '081262481507',
+    'DANA': '081262481507',
+    'OVO': '081262481507',
+    'ShopeePay': '081262481507',
   };
 
   void _showTransactionNumber(BuildContext context, String walletName) {

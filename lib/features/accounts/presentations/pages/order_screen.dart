@@ -1,5 +1,9 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
@@ -11,10 +15,10 @@ class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key, required this.order});
 
   @override
-  State<OrderScreen> createState() => _CheckoutScreenState();
+  State<OrderScreen> createState() => _OrderScreenState();
 }
 
-class _CheckoutScreenState extends State<OrderScreen> {
+class _OrderScreenState extends State<OrderScreen> {
   String _selectedDeliveryMethod = 'Delivery';
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -28,7 +32,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
 
   String deliveryAddress = 'No saved address';
   TimeOfDay? selectedTime;
-  String? table;
+  String? seat;
   bool isEditing = false;
 
   @override
@@ -42,7 +46,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
         ? TimeOfDay.fromDateTime(widget.order['timeToCome'].toDate())
         : null;
     if (widget.order['orderType'] == 'Dine-in') {
-      table = widget.order['table'] ?? 'Pending';
+      seat = widget.order['seatNumber'] ?? 'Pending';
     }
   }
 
@@ -79,6 +83,15 @@ class _CheckoutScreenState extends State<OrderScreen> {
     return format.format(selectedDateTime);
   }
 
+  Future<LatLng> _getCoordinatesFromAddress(String address) async {
+    List<Location> locations = await locationFromAddress(address);
+    if (locations.isNotEmpty) {
+      return LatLng(locations.first.latitude, locations.first.longitude);
+    } else {
+      throw Exception('Address not found');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Sizer().init(context);
@@ -95,9 +108,9 @@ class _CheckoutScreenState extends State<OrderScreen> {
             const SizedBox(height: 12),
             _buildDeliveryAddress(),
             const SizedBox(height: 12),
-            table != null
+            seat != null
                 ? Column(children: [
-                    _buildTableDetails(),
+                    _buildSeatDetails(),
                     const SizedBox(height: 12),
                   ])
                 : const SizedBox.shrink(),
@@ -113,8 +126,8 @@ class _CheckoutScreenState extends State<OrderScreen> {
             const SizedBox(height: 20),
             _buildStatus(),
             const SizedBox(height: 20),
-            _buildMapDriver(),
-            const SizedBox(height: 20),
+            // _buildMapDriver(),
+            // const SizedBox(height: 20),
             _buildPaymentMethods(),
           ],
         ),
@@ -131,7 +144,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
         onPressed: () => Navigator.pop(context),
       ),
       title: const Text(
-        'Checkout',
+        'Order',
         style: TextStyle(
           color: mDarkBrown,
           fontSize: 20,
@@ -192,28 +205,44 @@ class _CheckoutScreenState extends State<OrderScreen> {
             children: [
               if (isDelivery)
                 Expanded(
-                  child: isEditing
-                      ? TextField(
-                          controller: _addressController,
-                          style: const TextStyle(color: mDarkBrown),
-                          decoration: const InputDecoration(
-                            hintText: 'Enter your address',
-                            hintStyle: TextStyle(color: mDarkBrown),
-                            border: InputBorder.none,
-                          ),
-                          onSubmitted: (value) {
-                            setState(() {
-                              if (value.isNotEmpty) {
-                                deliveryAddress = value;
-                              }
-                              isEditing = false;
-                            });
-                          },
-                        )
-                      : Text(
-                          deliveryAddress,
-                          style: const TextStyle(color: mDarkBrown),
+                  child: Column(
+                    children: [
+                      Text(
+                        deliveryAddress,
+                        style: const TextStyle(color: mDarkBrown),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.all<Color>(mBrown),
                         ),
+                        onPressed: () async {
+                          try {
+                            LatLng destinationLocation =
+                                await _getCoordinatesFromAddress(
+                                    deliveryAddress);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => OrderTrackingScreen(
+                                  destinationLocation: destinationLocation,
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text('Failed to get coordinates: $e')),
+                            );
+                          }
+                        },
+                        child: const Text('Track Order',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
                 )
               else
                 Expanded(
@@ -273,7 +302,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildTableDetails() {
+  Widget _buildSeatDetails() {
     return _buildSectionContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,7 +311,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
             children: [
               Icon(Icons.table_bar, color: mBrown),
               SizedBox(width: 8),
-              Text("Table:",
+              Text("Seat:",
                   style: TextStyle(
                     color: mDarkBrown,
                     fontWeight: FontWeight.w600,
@@ -294,7 +323,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: table == "Pending"
+                child: seat == "Pending"
                     ? Text(
                         "Pending",
                         style: TextStyle(
@@ -303,7 +332,7 @@ class _CheckoutScreenState extends State<OrderScreen> {
                         ),
                       )
                     : Text(
-                        table!,
+                        seat!,
                         style: TextStyle(
                           color: Colors.green[600],
                           fontWeight: FontWeight.w600,
@@ -377,7 +406,9 @@ class _CheckoutScreenState extends State<OrderScreen> {
                         ? Colors.grey[600]
                         : widget.order['status'] == 'processing'
                             ? mDarkBrown
-                            : Colors.green,
+                            : widget.order['status'] == 'cancelled'
+                                ? Colors.red
+                                : Colors.green,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -389,16 +420,16 @@ class _CheckoutScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildMapDriver() {
-    return _buildSectionContainer(
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: OrderTrackingScreen()),
-        ],
-      ),
-    );
-  }
+  // Widget _buildMapDriver() {
+  //   return _buildSectionContainer(
+  //     child: const Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Expanded(child: OrderTrackingScreen()),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildOrderItem(Map<String, dynamic> cartItem) {
     return Padding(

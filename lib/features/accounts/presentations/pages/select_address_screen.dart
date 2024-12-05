@@ -12,11 +12,12 @@ class SelectAddressScreen extends StatefulWidget {
 }
 
 class _SelectAddressScreenState extends State<SelectAddressScreen> {
-  LatLng _currentPosition =
-      const LatLng(37.7749, -122.4194); // Default: San Francisco
+  late GoogleMapController _mapController;
+  LatLng? _currentPosition;
   String _selectedAddress = "Move the map to select an address";
   bool _isLoading = true;
   String _errorMessage = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -45,9 +46,7 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
 
       // Get current position
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: AndroidSettings(
-          accuracy: LocationAccuracy.high,
-        ),
+        locationSettings: AndroidSettings(accuracy: LocationAccuracy.high),
       );
 
       setState(() {
@@ -56,10 +55,10 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
       });
 
       // Get address for current location
-      await _getAddressFromLatLng(_currentPosition);
+      await _getAddressFromLatLng(_currentPosition!);
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to get current location';
+        _errorMessage = 'Failed to get current location: $e';
         _isLoading = false;
       });
     }
@@ -122,7 +121,42 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
   }
 
   void _onCameraIdle() {
-    _getAddressFromLatLng(_currentPosition);
+    _getAddressFromLatLng(_currentPosition!);
+  }
+
+  Future<void> _searchAddress() async {
+    try {
+      List<Location> locations =
+          await locationFromAddress(_searchController.text);
+      if (locations.isNotEmpty) {
+        Location location = locations.first;
+        LatLng newPosition = LatLng(location.latitude, location.longitude);
+        _mapController.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: newPosition, zoom: 14.0),
+          ),
+        );
+        setState(() {
+          _currentPosition = newPosition;
+        });
+        await _getAddressFromLatLng(newPosition);
+      } else {
+        setState(() {
+          _errorMessage = 'Address not found';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to search address: $e';
+      });
+    }
+  }
+
+  void _confirmAddress() {
+    Navigator.pop(context, {
+      'address': _selectedAddress,
+      'coordinates': _currentPosition,
+    });
   }
 
   @override
@@ -130,6 +164,12 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Select Address"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: _confirmAddress,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -145,19 +185,49 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
                   children: [
                     GoogleMap(
                       initialCameraPosition: CameraPosition(
-                        target: _currentPosition,
+                        target: _currentPosition!,
                         zoom: 14.0,
                       ),
-                      onMapCreated: (GoogleMapController controller) {},
+                      onMapCreated: (GoogleMapController controller) {
+                        _mapController = controller;
+                      },
                       onCameraMove: _onCameraMove,
                       onCameraIdle: _onCameraIdle,
+                      myLocationEnabled: true,
                     ),
                     const Center(
                       child:
                           Icon(Icons.location_pin, size: 40, color: Colors.red),
                     ),
                     Positioned(
-                      bottom: 50,
+                      top: 64,
+                      left: 16,
+                      right: 16,
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Search address',
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: _searchAddress,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 100,
                       left: 10,
                       right: 10,
                       child: Card(
@@ -172,16 +242,6 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
                                 style: const TextStyle(fontSize: 16),
                               ),
                               const SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed:
-                                    _selectedAddress != 'Address not found'
-                                        ? () {
-                                            Navigator.pop(
-                                                context, _selectedAddress);
-                                          }
-                                        : null,
-                                child: const Text("Confirm Address"),
-                              ),
                             ],
                           ),
                         ),

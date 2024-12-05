@@ -12,6 +12,8 @@ abstract class SignOutEvent extends Equatable {
 
 class SignOutRequested extends SignOutEvent {}
 
+class SignOutReset extends SignOutEvent {}
+
 abstract class SignOutState extends Equatable {
   const SignOutState();
 
@@ -40,6 +42,7 @@ class SignOutBloc extends Bloc<SignOutEvent, SignOutState> {
 
   SignOutBloc(this._authenticationRepository, this._authBloc) : super(SignOutInitial()) {
     on<SignOutRequested>(_onSignOutRequested);
+    on<SignOutReset>(_onSignOutReset);
   }
 
   void _onSignOutRequested(SignOutRequested event, Emitter<SignOutState> emit) async {
@@ -51,5 +54,9 @@ class SignOutBloc extends Bloc<SignOutEvent, SignOutState> {
     } catch (error) {
       emit(SignOutFailure(error.toString()));
     }
+  }
+
+  void _onSignOutReset(SignOutReset event, Emitter<SignOutState> emit) {
+    emit(SignOutInitial());
   }
 }

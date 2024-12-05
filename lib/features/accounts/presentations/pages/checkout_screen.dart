@@ -10,6 +10,7 @@ import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/data/entities/cart_item.dart';
+import 'package:mona_coffee/features/accounts/presentations/pages/select_address_screen.dart';
 import 'package:mona_coffee/features/accounts/presentations/payments/bank_selection_dialog.dart';
 import 'package:mona_coffee/features/accounts/presentations/payments/qris_selection_dialog.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/delivery_method_selector.dart';
@@ -284,28 +285,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             children: [
               if (isDelivery)
                 Expanded(
-                  child: isEditing
-                      ? TextField(
-                          controller: _addressController,
-                          style: const TextStyle(color: mDarkBrown),
-                          decoration: const InputDecoration(
-                            hintText: 'Enter your address',
-                            hintStyle: TextStyle(color: mDarkBrown),
-                            border: InputBorder.none,
-                          ),
-                          onSubmitted: (value) {
-                            setState(() {
-                              if (value.isNotEmpty) {
-                                deliveryAddress = value;
-                              }
-                              isEditing = false;
-                            });
-                          },
-                        )
-                      : Text(
-                          deliveryAddress,
-                          style: const TextStyle(color: mDarkBrown),
+                  child: Column(
+                    children: [
+                      ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.all<Color>(mBrown),
                         ),
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SelectAddressScreen(),
+                            ),
+                          );
+                          if (result != null) {
+                            setState(() {
+                              _addressController.text = result['address'];
+                            });
+                          }
+                        },
+                        child: const Text(
+                          'Select your delivery address',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _addressController.text.isEmpty
+                            ? 'No address selected'
+                            : _addressController.text,
+                        style: const TextStyle(color: mDarkBrown),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 )
               else
                 Expanded(
@@ -334,11 +348,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     _selectTime(context);
                   }
                 },
-                child: Text(
-                  isDelivery ? (isEditing ? 'Save' : 'Edit') : 'Edit',
-                  style: const TextStyle(
-                      color: mBrown, fontWeight: FontWeight.w600),
-                ),
+                child: !isDelivery
+                    ? Text(
+                        !isDelivery ? (isEditing ? 'Save' : 'Edit') : '',
+                        style: const TextStyle(
+                            color: mBrown, fontWeight: FontWeight.w600),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),
