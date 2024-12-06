@@ -26,6 +26,7 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
   double totalDistance = 0.0;
   int deliveryFee = 0;
   LatLng sourceLocation = const LatLng(3.5972701734490427, 98.68792492347372);
+  BitmapDescriptor sourceIcon = BitmapDescriptor.defaultMarker;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -33,6 +34,17 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    setCustomMarkerIcon();
+  }
+
+  void setCustomMarkerIcon() {
+    BitmapDescriptor.asset(
+            ImageConfiguration.empty, "assets/images/mona_marker.png")
+        .then((icon) {
+      setState(() {
+        sourceIcon = icon;
+      });
+    });
   }
 
   double calculateDistance(LatLng start, LatLng end) {
@@ -303,6 +315,13 @@ class _SelectAddressScreenState extends State<SelectAddressScreen> {
                         target: _currentPosition!,
                         zoom: 14.0,
                       ),
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('source'),
+                          position: sourceLocation,
+                          icon: sourceIcon,
+                        ),
+                      },
                       onMapCreated: (GoogleMapController controller) {
                         _mapController = controller;
                       },

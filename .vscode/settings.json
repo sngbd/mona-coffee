@@ -3,5 +3,5 @@
     "source.fixAll": "explicit"
   },
   "java.configuration.updateBuildConfiguration": "disabled",
-  "cmake.sourceDirectory": "D:/flutter-projects/mona_coffee/linux"
+  "cmake.sourceDirectory": "/Users/user/Programming/Projects/mona_coffee/linux"
 }

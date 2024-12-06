@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mona_coffee/core/utils/helper.dart';
 
 class AdminOrderDetailScreen extends StatelessWidget {
   final Map<String, dynamic> orderData;
@@ -12,15 +13,6 @@ class AdminOrderDetailScreen extends StatelessWidget {
     super.key,
     required this.orderData,
   });
-
-  String formatPrice(num price) {
-    final formatCurrency = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-    return formatCurrency.format(price);
-  }
 
   void _showImagePreview(BuildContext context, String base64Image) {
     showDialog(
@@ -211,12 +203,14 @@ class AdminOrderDetailScreen extends StatelessWidget {
     final items = (orderData['items'] as List).cast<Map<String, dynamic>>();
     final subtotal = items.fold<num>(
       0,
-      (total, item) => total + (item['price'] as num) * (item['quantity'] as num),
+      (total, item) =>
+          total + (item['price'] as num) * (item['quantity'] as num),
     );
     final deliveryFee =
         orderData['orderType'].toString().toLowerCase() == 'delivery'
-            ? 15000
+            ? orderData['deliveryFee'] ?? 15000
             : 0;
+    final double distance = orderData['distance'] ?? 0.0;
     const otherFee = 2000;
     final total = subtotal + deliveryFee + otherFee;
 
@@ -427,7 +421,7 @@ class AdminOrderDetailScreen extends StatelessWidget {
                           style: TextStyle(color: mDarkBrown),
                         ),
                         Text(
-                          formatPrice(subtotal),
+                          Helper().formatCurrency(subtotal),
                           style: const TextStyle(color: mDarkBrown),
                         ),
                       ],
@@ -442,7 +436,9 @@ class AdminOrderDetailScreen extends StatelessWidget {
                             style: TextStyle(color: mDarkBrown),
                           ),
                           Text(
-                            formatPrice(deliveryFee),
+                            distance != 0.0
+                                ? "${Helper().formatCurrency(deliveryFee)} (${distance.toStringAsFixed(0)} km)"
+                                : Helper().formatCurrency(deliveryFee),
                             style: const TextStyle(color: mDarkBrown),
                           ),
                         ],
@@ -457,7 +453,7 @@ class AdminOrderDetailScreen extends StatelessWidget {
                           style: TextStyle(color: mDarkBrown),
                         ),
                         Text(
-                          formatPrice(otherFee),
+                          Helper().formatCurrency(otherFee),
                           style: const TextStyle(color: mDarkBrown),
                         ),
                       ],
@@ -475,7 +471,7 @@ class AdminOrderDetailScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          formatPrice(total),
+                          Helper().formatCurrency(total),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             color: mDarkBrown,

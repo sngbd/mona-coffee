@@ -374,7 +374,8 @@ class _OrderScreenState extends State<OrderScreen> {
               ? (fee != null && distance != null)
                   ? _buildPriceRow('Delivery Fee',
                       '${Helper().formatCurrency(fee!)} (${distance != double.infinity ? distance!.toStringAsFixed(0) : '∞'} km)')
-                  : _buildPriceRow('Delivery Fee', 'Data not available')
+                  : _buildPriceRow(
+                      'Delivery Fee', Helper().formatCurrency(15000))
               : const SizedBox.shrink(),
           _buildPriceRow('Other Fee', 'Rp 2.000'),
           const Divider(),
