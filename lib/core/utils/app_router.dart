@@ -17,6 +17,7 @@ import 'package:mona_coffee/features/admin/presentations/pages/admin_profile_scr
 import 'package:mona_coffee/features/authentications/presentation/blocs/auth_bloc.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/profile_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_up_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/pages/forgot_password.dart';
 import 'package:mona_coffee/features/authentications/presentation/pages/sign_in_form_screen.dart';
 import 'package:mona_coffee/features/authentications/presentation/pages/sign_in_screen.dart';
@@ -44,14 +45,22 @@ class AppRouter {
     ),
     redirect: (context, GoRouterState state) async {
       final authState = context.read<AuthBloc>().state;
+      final FormStatusSignUp signUpState =
+          context.read<SignUpBloc>().state.status;
 
-      if (authState is AuthAuthenticated) {
+      if (authState is AuthAuthenticated &&
+          signUpState == FormStatusSignUp.initial) {
         context.read<ProfileBloc>().add(InitializeProfileState());
         final email = authState.user.email;
         if (email == 'admin@coffee.mona') {
           return '/admin-home';
         }
         return '/home';
+      } else if (authState is AuthAuthenticated &&
+          signUpState == FormStatusSignUp.success) {
+        context.read<ProfileBloc>().add(InitializeProfileState());
+        context.read<AuthBloc>().add(AuthLoggedOut());
+        return '/sign-up-login-form';
       } else if (state is AuthUnauthenticated) {
         return '/';
       }

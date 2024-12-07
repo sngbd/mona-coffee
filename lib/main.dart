@@ -18,6 +18,7 @@ import 'package:mona_coffee/features/authentications/presentation/blocs/profile_
 import 'package:mona_coffee/features/authentications/presentation/blocs/reset_password_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_up_bloc.dart';
 import 'package:mona_coffee/features/home/data/repositories/favorite_repository.dart';
 import 'package:mona_coffee/features/home/data/repositories/menu_repository.dart';
 import 'package:mona_coffee/features/home/presentation/blocs/favorite_bloc.dart';
@@ -48,6 +49,7 @@ class MonaCoffeeApp extends StatelessWidget {
 
     final authBloc = AuthBloc(FirebaseAuth.instance);
     final signInBloc = SignInBloc(authenticationRepository);
+    final signUpBloc = SignUpBloc();
     authBloc.add(AuthStarted());
     final signOutBloc = SignOutBloc(authenticationRepository, authBloc);
     final profileBloc = ProfileBloc(authenticationRepository);
@@ -91,6 +93,7 @@ class MonaCoffeeApp extends StatelessWidget {
         providers: [
           BlocProvider(create: (context) => authBloc),
           BlocProvider(create: (context) => signInBloc),
+          BlocProvider(create: (context) => signUpBloc),
           BlocProvider(create: (context) => signOutBloc),
           BlocProvider(create: (context) => profileBloc),
           BlocProvider(create: (context) => resetPasswordBloc),

@@ -7,6 +7,7 @@ import 'package:mona_coffee/core/utils/sizer.dart';
 import 'package:mona_coffee/core/widgets/activity_indicator.dart';
 import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_up_bloc.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -29,6 +30,7 @@ class LoginScreen extends StatelessWidget {
 
         if (state.status == FormStatusSignIn.success) {
           context.read<SignInBloc>().add(ResetFormSignIn());
+          context.read<SignUpBloc>().add(ResetFormSignUp());
           context.goNamed('home');
         }
       },

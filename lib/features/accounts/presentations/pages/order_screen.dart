@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
 import 'package:mona_coffee/core/utils/sizer.dart';
+import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/presentations/pages/order_tracking_screen.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -218,32 +219,49 @@ class _OrderScreenState extends State<OrderScreen> {
                       const SizedBox(height: 10),
                       ElevatedButton(
                         style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.all<Color>(mBrown),
+                          backgroundColor: WidgetStateProperty.all<Color>(
+                            widget.order['status'] == 'completed'
+                                ? mBrown
+                                : Colors.grey,
+                          ),
                         ),
                         onPressed: () async {
-                          try {
-                            LatLng destinationLocation =
-                                await _getCoordinatesFromAddress(
-                                    deliveryAddress);
-                            Navigator.push(
+                          if (widget.order['status'] != 'completed') {
+                            Flasher.showSnackBar(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => OrderTrackingScreen(
-                                  destinationLocation: destinationLocation,
+                              'Error',
+                              'Order is not completed yet',
+                              Icons.error_outline,
+                              Colors.red,
+                            );
+                          } else {
+                            try {
+                              LatLng destinationLocation =
+                                  await _getCoordinatesFromAddress(
+                                      deliveryAddress);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => OrderTrackingScreen(
+                                    destinationLocation: destinationLocation,
+                                  ),
                                 ),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                      Text('Failed to get coordinates: $e')),
-                            );
+                              );
+                            } catch (e) {
+                              Flasher.showSnackBar(
+                                context,
+                                'Error',
+                                'Failed to get coordinates: $e',
+                                Icons.error_outline,
+                                Colors.red,
+                              );
+                            }
                           }
                         },
-                        child: const Text('Track Order',
-                            style: TextStyle(color: Colors.white)),
+                        child: const Text(
+                          'Track Order',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -427,17 +445,6 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
     );
   }
-
-  // Widget _buildMapDriver() {
-  //   return _buildSectionContainer(
-  //     child: const Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Expanded(child: OrderTrackingScreen()),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildOrderItem(Map<String, dynamic> cartItem) {
     return Padding(

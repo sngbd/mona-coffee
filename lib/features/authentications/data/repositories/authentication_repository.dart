@@ -138,10 +138,12 @@ class AuthenticationRepository {
       throw Exception('User is not authenticated');
     }
 
+    final currentEmail = currentUser!.email;
+
     if (userProfile.name != null) {
       await currentUser!.updateProfile(displayName: userProfile.name);
     }
-    if (userProfile.email != null) {
+    if (userProfile.email != currentEmail) {
       await currentUser!.verifyBeforeUpdateEmail(userProfile.email!);
     }
 

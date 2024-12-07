@@ -8,7 +8,9 @@ import 'package:mona_coffee/core/widgets/flasher.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/skeleton_account_card.dart';
 import 'package:mona_coffee/features/accounts/presentations/widgets/skeleton_google_account_card.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/profile_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_in_bloc.dart';
 import 'package:mona_coffee/features/authentications/presentation/blocs/sign_out_bloc.dart';
+import 'package:mona_coffee/features/authentications/presentation/blocs/sign_up_bloc.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -43,7 +45,7 @@ class ProfileScreen extends StatelessWidget {
                 }
 
                 if (state is SignOutSuccess) {
-                  context.goNamed('login', extra: {'clearStack': true});
+                  context.goNamed('login');
                 }
               },
               child: IconButton(
@@ -53,8 +55,9 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   context.read<SignOutBloc>().add(SignOutRequested());
-                  context.read<SignOutBloc>().add(SignOutReset());
                   context.read<ProfileBloc>().add(ResetProfileForm());
+                  context.read<SignInBloc>().add(ResetFormSignIn());
+                  context.read<SignUpBloc>().add(ResetFormSignUp());
                 },
               ),
             ),
