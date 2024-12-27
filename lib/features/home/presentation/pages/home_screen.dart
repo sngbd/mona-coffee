@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logger/web.dart';
 import 'package:mona_coffee/core/utils/common.dart';
 import 'package:mona_coffee/core/utils/helper.dart';
@@ -202,6 +205,123 @@ class _HomeContentState extends State<HomeContent> {
     context.read<MenuBloc>().add(SearchMenuItems(query));
   }
 
+  Future<void> _showInputDialog() async {
+    final TextEditingController inputController = TextEditingController();
+    final String? input = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          title: const Text('Ask Gemini'),
+          content: TextField(
+            controller: inputController,
+            decoration: const InputDecoration(
+              hintText: 'Enter your question',
+            ),
+            onSubmitted: (value) => Navigator.pop(context, value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, inputController.text),
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (input != null && input.isNotEmpty) {
+      _getGeminiAnswer(input);
+    }
+  }
+
+  List<TextSpan> _formatGeminiAnswer(String answer) {
+    final List<TextSpan> spans = [];
+    final RegExp exp = RegExp(r'\*\*(.*?)\*\*');
+    final matches = exp.allMatches(answer);
+
+    int lastMatchEnd = 0;
+    for (final match in matches) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(text: answer.substring(lastMatchEnd, match.start)));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ));
+      lastMatchEnd = match.end;
+    }
+    if (lastMatchEnd < answer.length) {
+      spans.add(TextSpan(text: answer.substring(lastMatchEnd)));
+    }
+
+    return spans;
+  }
+
+  Future<void> _getGeminiAnswer(String query) async {
+    final model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: 'AIzaSyDm4GSukd-DuY2DnNoXpj8gbMe-8fEgMGg',
+    );
+
+    final menuItems = context.read<MenuBloc>().state is MenuLoaded
+        ? (context.read<MenuBloc>().state as MenuLoaded).items
+        : [];
+    final menuInfo = menuItems
+        .map((item) =>
+            '${item.name}: ${item.description}; Price per size - S (small): ${item.smallPrice}, M (medium): ${item.mediumPrice}, L (large): ${item.largePrice}; rating: ${item.rating}; rating count: ${item.ratingCount}; stock: ${item.stock}')
+        .join('\n');
+    final prompt =
+        'Here is the menu information:\n$menuInfo\n\nUser query: $query';
+
+    final response = await model.generateContent([Content.text(prompt)]);
+
+    if (response.text != '') {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Gemini Answer'),
+            content: RichText(
+              text: TextSpan(
+                style: DefaultTextStyle.of(context).style,
+                children: _formatGeminiAnswer(response.text!),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Failed to get answer from Gemini API'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String? name = _firebaseAuth.currentUser!.displayName;
@@ -237,6 +357,17 @@ class _HomeContentState extends State<HomeContent> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        onPressed: _showInputDialog,
+        child: const CircleAvatar(
+          radius: 100,
+          backgroundImage: AssetImage(
+              'assets/images/gemini_logo.png'), // Replace with your Gemini logo asset
+          backgroundColor: Colors.white,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
